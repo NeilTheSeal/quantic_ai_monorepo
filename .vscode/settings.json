@@ -60,5 +60,14 @@
   "[toml]": { "editor.defaultFormatter": "tamasfe.even-better-toml" },
 
   // --- Shell: shell-format (format), ShellCheck (lint) ---
-  "[shellscript]": { "editor.defaultFormatter": "foxundermoon.shell-format" }
+  "[shellscript]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  },
+  "python-envs.pythonProjects": [
+    {
+      "path": ".",
+      "envManager": "ms-python.python:venv",
+      "packageManager": "ms-python.python:pip"
+    }
+  ]
 }
