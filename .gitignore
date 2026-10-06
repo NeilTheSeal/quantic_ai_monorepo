@@ -6,3 +6,5 @@ __pycache__/
 .pytest_cache/
 .ipynb_checkpoints/
 .env
+
+# --- Nested project repositories (each has its own .git; see README.md) ---
