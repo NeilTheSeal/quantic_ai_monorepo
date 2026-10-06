@@ -1,0 +1,32 @@
+{
+  "recommendations": [
+    // Python
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "charliermarsh.ruff",
+    "ms-python.mypy-type-checker",
+    "ms-toolsai.jupyter",
+
+    // JavaScript / TypeScript / web / data formats
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+
+    // Markdown
+    "davidanson.vscode-markdownlint",
+
+    // TOML
+    "tamasfe.even-better-toml",
+
+    // Shell
+    "foxundermoon.shell-format",
+    "timonwong.shellcheck"
+  ],
+  "unwantedRecommendations": [
+    // Replaced by Ruff
+    "ms-python.black-formatter",
+    "ms-python.autopep8",
+    "ms-python.isort",
+    "ms-python.pylint",
+    "ms-python.flake8"
+  ]
+}
