@@ -1,0 +1,4 @@
+# Hooks run under whatever `python3` is on PATH (3.9 on a bare macOS), not the 3.14 venv.
+# Keep their syntax compatible with older interpreters; everything else inherits the root config.
+extend = "../../pyproject.toml"
+target-version = "py39"

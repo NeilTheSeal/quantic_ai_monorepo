@@ -5,18 +5,11 @@ __pycache__/
 .ruff_cache/
 .pytest_cache/
 .ipynb_checkpoints/
-.env
-
-# --- Node ---
 node_modules/
-
-# --- Secrets ---
+dist/
+.env
 .env.*
 !.env.example
-
-# --- Claude Code: personal/local files ---
 CLAUDE.local.md
 .claude/settings.local.json
 .claude/worktrees/
-
-# --- Nested project repositories (each has its own .git; see README.md) ---

@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "p=\"${CLAUDE_PROJECT_DIR}/.venv/bin/python\"; [ -x \"$p\" ] || p=python3; \"$p\" \"${CLAUDE_PROJECT_DIR}/.claude/hooks/session_start.py\"",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "p=\"${CLAUDE_PROJECT_DIR}/.venv/bin/python\"; [ -x \"$p\" ] || p=python3; \"$p\" \"${CLAUDE_PROJECT_DIR}/.claude/hooks/git_guard.py\"",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "p=\"${CLAUDE_PROJECT_DIR}/.venv/bin/python\"; [ -x \"$p\" ] || p=python3; \"$p\" \"${CLAUDE_PROJECT_DIR}/.claude/hooks/secret_guard.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "p=\"${CLAUDE_PROJECT_DIR}/.venv/bin/python\"; [ -x \"$p\" ] || p=python3; \"$p\" \"${CLAUDE_PROJECT_DIR}/.claude/hooks/post_edit_check.py\"",
+            "timeout": 90
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(.venv/bin/python:*)",
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(pytest:*)",
+      "Bash(ruff:*)",
+      "Bash(mypy:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git blame:*)",
+      "Bash(git ls-files:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh issue view:*)",
+      "Bash(npm run:*)",
+      "Bash(npm test:*)",
+      "Bash(npx prettier:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npx tsc:*)",
+      "Bash(shellcheck:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(mkdir:*)",
+      "Bash(ollama list:*)",
+      "Bash(ollama ps:*)",
+      "Read",
+      "Glob",
+      "Grep",
+      "Edit",
+      "Write"
+    ],
+    "deny": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git checkout:*)",
+      "Bash(git switch:*)",
+      "Bash(git reset:*)",
+      "Bash(git rebase:*)",
+      "Bash(git merge:*)",
+      "Bash(git stash:*)",
+      "Bash(git init:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(gh repo create:*)",
+      "Bash(sudo:*)",
+      "Bash(rm -rf:*)",
+      "Bash(pip install:*)",
+      "Bash(pip3 install:*)",
+      "Read(./.env)",
+      "Read(./**/.env)"
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+# Python 3.14 (see .python-version)
+
+# --- Runtime ---
+
+# --- Dev tools: lint/format, type checking, testing ---
+ruff>=0.14.0
+mypy>=1.18.2
+pytest>=8.4.2

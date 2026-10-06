@@ -23,9 +23,12 @@ quantic_ai_monorepo/
 ├── courses/                         # One folder per course
 │   └── ai_assisted_software_development/
 │       └── lesson_1/                # One folder per lesson
-├── .claude/                         # Claude Code agents and skills (also read by Copilot)
-│   ├── agents/
-│   └── skills/
+├── .claude/                         # AI assistant config (Claude Code; Copilot reads most of it)
+│   ├── agents/                      # Subagents: reviewer, researcher
+│   ├── hooks/                       # Python hook scripts (git guard, secret guard, post-edit checks)
+│   ├── rules/                       # Path-scoped rules: python, typescript, markdown, shell
+│   ├── skills/                      # /check, /new-lesson, /new-project, local-llm
+│   └── settings.json                # Hooks and permissions (Claude Code only)
 ├── .github/
 │   └── copilot-instructions.md      # GitHub Copilot entry point; defers to CLAUDE.md
 ├── .githooks/pre-commit             # Ruff + mypy on staged Python files
@@ -236,15 +239,51 @@ Run `git` commands from inside the nested project's directory to work with its o
 This repo is set up for both **Claude Code** and **GitHub Copilot**, and both use the same
 context. [CLAUDE.md](CLAUDE.md) is the single source of truth.
 
-| File / folder                                                      | Read by                        | Purpose                                |
-| ------------------------------------------------------------------ | ------------------------------ | -------------------------------------- |
-| [CLAUDE.md](CLAUDE.md)                                             | Claude Code, Copilot (VS Code) | Shared project context and conventions |
-| [.github/copilot-instructions.md](.github/copilot-instructions.md) | Copilot                        | Points Copilot to `CLAUDE.md`          |
-| [.claude/agents/](.claude/agents/)                                 | Claude Code, Copilot (VS Code) | Custom subagents (`<name>.md`)         |
-| [.claude/skills/](.claude/skills/)                                 | Claude Code, Copilot (VS Code) | Skills (`<name>/SKILL.md`)             |
+| File / folder                                                      | Read by                        | Purpose                                                  |
+| ------------------------------------------------------------------ | ------------------------------ | -------------------------------------------------------- |
+| [CLAUDE.md](CLAUDE.md)                                             | Claude Code, Copilot (VS Code) | Shared project context, conventions, and workflow rules  |
+| [.github/copilot-instructions.md](.github/copilot-instructions.md) | Copilot                        | Points Copilot to `CLAUDE.md`                            |
+| [.claude/rules/](.claude/rules/)                                   | Claude Code, Copilot (VS Code) | Path-scoped rules that load when matching files are open |
+| [.claude/skills/](.claude/skills/)                                 | Claude Code, Copilot (VS Code) | Skills (`<name>/SKILL.md`)                               |
+| [.claude/agents/](.claude/agents/)                                 | Claude Code, Copilot (VS Code) | Custom subagents (`<name>.md`)                           |
+| [.claude/settings.json](.claude/settings.json)                     | Claude Code                    | Hooks and permission allow/deny lists                    |
+| [.claude/hooks/](.claude/hooks/)                                   | Claude Code                    | Hook scripts run by `settings.json`                      |
 
-VS Code Copilot reads `CLAUDE.md`, `.claude/agents/`, and `.claude/skills/` natively, so there are
-no duplicate copies under `.github/`. Add agents and skills to `.claude/` only.
+VS Code Copilot reads `CLAUDE.md`, `.claude/rules/`, `.claude/agents/`, and `.claude/skills/`
+natively, so there are no duplicate copies under `.github/`. Add instructions, agents, and skills
+to `.claude/` only.
 
-A nested project repo can have its own `CLAUDE.md` for project-specific context. Claude Code
-loads it alongside the root file when it works in that directory.
+### Ground rules the assistants follow
+
+- **Git and GitHub are read-only for the assistant.** It never runs `git add`, `commit`, `push`,
+  `checkout`, `gh pr create`, or any other state-changing command. In Claude Code a `PreToolUse`
+  hook ([git_guard.py](.claude/hooks/git_guard.py)) blocks them; Copilot follows the same rule by
+  instruction.
+- **No secrets in tracked files.** [secret_guard.py](.claude/hooks/secret_guard.py) blocks writes
+  to `.env`-style files and content that matches common token formats.
+- **Every Python edit is checked.** [post_edit_check.py](.claude/hooks/post_edit_check.py) runs
+  `ruff format`, `ruff check`, and `mypy` on the file through the nearest `.venv` and feeds failures
+  back to the assistant. Prettier-managed files are formatted when a `node_modules/` is nearby, and
+  shell scripts go through `shellcheck` if installed.
+- **Sessions start with context.** [session_start.py](.claude/hooks/session_start.py) injects the
+  branch, working-tree status, venv state, and nested repos at the start of each conversation.
+
+The hook scripts are plain Python with no dependencies and are linted by the repo's own gates.
+They run under the root `.venv` when it exists and fall back to `python3`, so
+[.claude/hooks/ruff.toml](.claude/hooks/ruff.toml) pins them to Python 3.9 syntax.
+
+### Skills and agents
+
+| Name            | Kind  | Use                                                                    |
+| --------------- | ----- | ---------------------------------------------------------------------- |
+| `/check [path]` | skill | Run ruff, mypy, and pytest; report a pass/fail table                   |
+| `/new-lesson`   | skill | Scaffold `courses/<course>/lesson_<n>/<module>.py` and run the gates   |
+| `/new-project`  | skill | Scaffold a nested project repo from templates; prints the git commands |
+| `local-llm`     | skill | Ollama integration conventions; loads automatically when relevant      |
+| `reviewer`      | agent | Read-only review of a change in a fresh context                        |
+| `researcher`    | agent | Documentation lookup with versions and sources                         |
+
+A nested project repo gets its own `CLAUDE.md` (from the `/new-project` template) for
+project-specific decisions. Claude Code loads it in addition to the root file when working in that
+directory. Personal, uncommitted overrides go in `CLAUDE.local.md` or `.claude/settings.local.json`,
+both gitignored.
