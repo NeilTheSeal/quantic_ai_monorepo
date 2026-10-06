@@ -5,6 +5,10 @@
     },
   ],
   "settings": {
+    "black-formatter.enabled": false,
     "pylint.enabled": false,
+    "ms-python.black-formatter.enabled": false,
+    "ms-python.pylint.enabled": false,
+    "editor.formatOnSave": true,
   },
 }
