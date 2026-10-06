@@ -81,3 +81,11 @@ Requires **Python 3.14.8** (pinned in `.python-version`).
 ### VS Code
 
 Run **Python: Select Interpreter** and choose `.venv` if it isn't picked automatically.
+
+### Git hooks
+
+Enable the pre-commit hook, which runs Ruff and mypy on staged Python files:
+
+```bash
+git config core.hooksPath .githooks
+```

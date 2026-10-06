@@ -1,0 +1,26 @@
+#!/bin/sh
+# Lint (Ruff) and type-check (mypy) the Python files staged for commit.
+# Enable once per clone with: git config core.hooksPath .githooks
+
+if [ -x .venv/Scripts/python.exe ]; then
+  PYTHON=.venv/Scripts/python.exe
+elif [ -x .venv/bin/python ]; then
+  PYTHON=.venv/bin/python
+else
+  echo "pre-commit: .venv not found. Create it first (see README.md)." >&2
+  exit 1
+fi
+
+staged() {
+  git diff --cached --name-only --diff-filter=ACMR -z -- '*.py' '*.pyi'
+}
+
+if [ -z "$(staged | tr -d '\0')" ]; then
+  exit 0
+fi
+
+echo "pre-commit: ruff check"
+staged | xargs -0 "$PYTHON" -m ruff check || exit 1
+
+echo "pre-commit: mypy"
+staged | xargs -0 "$PYTHON" -m mypy || exit 1
