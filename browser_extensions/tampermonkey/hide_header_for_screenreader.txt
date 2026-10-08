@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Hide Header for Screenreader
 // @namespace    http://tampermonkey.net/
-// @version      2026-10-08
+// @version      1.1
 // @description  Hide elements on Quantic pages
 // @author       You
 // @match        https://app.quantic.edu/*
