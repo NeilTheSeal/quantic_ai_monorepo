@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# Pull `main` from `origin` in every repository listed in repos.json. Other remotes (heroku, …)
+# and other branches are left alone.
+#
+#   pull-all            fast-forward main in each repo
+#   pull-all --dry-run  show what would be fetched without changing anything
+#
+# A repo checked out on another branch gets its local main fast-forwarded in place
+# (`git fetch origin main:main`) so the working tree is not disturbed. A repo whose path is
+# missing is reported and skipped; cloning is a separate step.
+set -euo pipefail
+
+dry_run=0
+case "${1:-}" in
+  "") ;;
+  --dry-run) dry_run=1 ;;
+  *)
+    echo "usage: pull-all [--dry-run]" >&2
+    exit 2
+    ;;
+esac
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+root="$(cd "${script_dir}/.." && pwd)"
+manifest="${root}/repos.json"
+
+for tool in git python3; do
+  if ! command -v "${tool}" >/dev/null; then
+    echo "pull-all: ${tool} is required" >&2
+    exit 1
+  fi
+done
+
+# One "path<TAB>origin-fetch-url" line per repo that has an origin remote.
+repos="$(python3 - "${manifest}" <<'EOF'
+import json, sys
+with open(sys.argv[1], encoding="utf-8") as f:
+    data = json.load(f)
+for repo in data["repositories"]:
+    origin = repo.get("remotes", {}).get("origin")
+    if origin is None:
+        print(f"{repo['name']}: no origin remote in repos.json, skipped", file=sys.stderr)
+        continue
+    print(f"{repo['path']}\t{origin['fetch']}")
+EOF
+)"
+
+failed=0
+while IFS=$'\t' read -r rel url; do
+  [ -n "${rel}" ] || continue
+  dir="${root}/${rel}"
+  if [ "${rel}" = "." ]; then dir="${root}"; fi
+  label="${rel}"
+
+  if [ ! -d "${dir}/.git" ]; then
+    echo "skip ${label}: not cloned (${url})" >&2
+    continue
+  fi
+
+  actual="$(git -C "${dir}" remote get-url origin 2>/dev/null || true)"
+  if [ "${actual}" != "${url}" ]; then
+    echo "warn ${label}: origin is '${actual}', manifest says '${url}'" >&2
+  fi
+
+  branch="$(git -C "${dir}" branch --show-current)"
+  if [ "${branch}" = "main" ]; then
+    cmd=(git -C "${dir}" pull --ff-only origin main)
+  else
+    echo "note ${label}: on '${branch}', updating local main without touching the worktree" >&2
+    cmd=(git -C "${dir}" fetch origin main:main)
+  fi
+
+  echo "== ${label}"
+  if [ "${dry_run}" -eq 1 ]; then
+    echo "   would run: ${cmd[*]}"
+    git -C "${dir}" fetch --dry-run origin main 2>&1 | sed 's/^/   /' || failed=$((failed + 1))
+  else
+    "${cmd[@]}" 2>&1 | sed 's/^/   /' || failed=$((failed + 1))
+  fi
+done <<<"${repos}"
+
+if [ "${failed}" -ne 0 ]; then
+  echo "pull-all: ${failed} repo(s) failed" >&2
+  exit 1
+fi

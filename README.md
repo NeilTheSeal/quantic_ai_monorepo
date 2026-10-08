@@ -33,12 +33,13 @@ quantic_ai_monorepo/
 │   └── copilot-instructions.md      # GitHub Copilot entry point; defers to CLAUDE.md
 ├── .githooks/pre-commit             # Ruff + mypy on staged Python files
 ├── .vscode/                         # Shared editor settings and recommended extensions
-├── scripts/                         # type-check-all, lint-check-all, format-check-all (on PATH via the .code-workspace)
+├── scripts/                         # pull-all, type/lint/format-check-all (on PATH via the .code-workspace)
 ├── CLAUDE.md                        # Shared AI assistant context (Claude Code + Copilot)
 ├── eslint.config.js                 # Shared ESLint rules for every JS/TS project
 ├── .prettierrc.json                 # Shared Prettier settings (.prettierignore excludes Python etc.)
 ├── tsconfig.base.json               # Shared TypeScript strictness; projects extend it
 ├── package.json                     # Root devDependencies: eslint, prettier, typescript
+├── repos.json                       # Manifest of every git repo in the tree: path, branch, remotes
 ├── pyproject.toml                   # Project metadata, Ruff, mypy, pytest config
 ├── requirements.txt                 # Python dependencies for the root .venv
 └── .python-version                  # Pinned Python version (3.14.8)

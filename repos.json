@@ -1,0 +1,42 @@
+{
+  "$comment": "Every git repository in this tree. `path` is relative to this file; nested repos are gitignored by their parent. Remotes mirror `git remote -v`.",
+  "repositories": [
+    {
+      "name": "quantic_ai_monorepo",
+      "path": ".",
+      "branch": "main",
+      "remotes": {
+        "origin": {
+          "fetch": "git@github.com:NeilTheSeal/quantic_ai_monorepo.git",
+          "push": "git@github.com:NeilTheSeal/quantic_ai_monorepo.git"
+        }
+      }
+    },
+    {
+      "name": "sync_server",
+      "path": "browser_extensions/sync_server",
+      "branch": "main",
+      "remotes": {
+        "origin": {
+          "fetch": "git@github.com:NeilTheSeal/sync_server.git",
+          "push": "git@github.com:NeilTheSeal/sync_server.git"
+        },
+        "heroku": {
+          "fetch": "https://git.heroku.com/sync-server-neilh.git",
+          "push": "https://git.heroku.com/sync-server-neilh.git"
+        }
+      }
+    },
+    {
+      "name": "sync_files",
+      "path": "browser_extensions/sync_server/sync_files",
+      "branch": "main",
+      "remotes": {
+        "origin": {
+          "fetch": "git@github.com:NeilTheSeal/sync_files.git",
+          "push": "git@github.com:NeilTheSeal/sync_files.git"
+        }
+      }
+    }
+  ]
+}

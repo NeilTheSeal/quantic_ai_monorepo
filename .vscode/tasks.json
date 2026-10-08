@@ -1,0 +1,20 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      // Fast-forward `main` from `origin` in every repo listed in repos.json when the
+      // workspace opens. VS Code asks once to allow automatic tasks for this folder.
+      "label": "pull-all on open",
+      "type": "shell",
+      "command": "${workspaceFolder}/scripts/pull-all",
+      "runOptions": { "runOn": "folderOpen" },
+      "presentation": {
+        "reveal": "silent",
+        "revealProblems": "onProblem",
+        "panel": "dedicated",
+        "close": false
+      },
+      "problemMatcher": []
+    }
+  ]
+}
