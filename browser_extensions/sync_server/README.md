@@ -18,7 +18,7 @@ heroku config:set WEBDAV_USER=neil WEBDAV_PASS="$(openssl rand -base64 24)" \
   GITHUB_TOKEN=github_pat_... GITHUB_REPO=NeilTheSeal/tampermonkey-sync
 ```
 
-Optional: `GITHUB_BRANCH` (default `main`), `GITHUB_PATH_PREFIX` (default `tampermonkey`).
+Optional: `GITHUB_BRANCH` (default `main`), `GITHUB_PATH_PREFIX` (default: repo root).
 See `.env.example`. On Heroku (`DYNO` is set) plain-HTTP requests are refused.
 
 Deploying from this subfolder of the monorepo:

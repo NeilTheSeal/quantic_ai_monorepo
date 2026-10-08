@@ -15,7 +15,7 @@ const storage = new GitHubStorage({
   token: required("GITHUB_TOKEN"),
   repo: required("GITHUB_REPO"),
   branch: process.env.GITHUB_BRANCH || "main",
-  prefix: (process.env.GITHUB_PATH_PREFIX ?? "tampermonkey").replace(/^\/+|\/+$/g, ""),
+  prefix: (process.env.GITHUB_PATH_PREFIX ?? "").replace(/^\/+|\/+$/g, ""),
 });
 
 const app = createApp(
