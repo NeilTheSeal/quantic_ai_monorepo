@@ -23,3 +23,5 @@ CLAUDE.local.md
 browser_extensions/**/sync_files/
 browser_extensions/sync_server/
 browser_extensions/repo_watch/
+
+web_apps/anthropic_personal_chat/
