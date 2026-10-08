@@ -20,7 +20,7 @@
     "terminal.integrated.env.osx": {
       "PATH": "${workspaceFolder}/scripts:${env:PATH}",
     },
-    "repoWatch.toastSeverities": ["info", "error", "warning"],
+    "repoWatch.toastSeverities": ["error", "warning"],
     "repoWatch.enabled": true,
     "repoWatch.intervalMinutes": 10,
     "repoWatch.runOnStartup": false,

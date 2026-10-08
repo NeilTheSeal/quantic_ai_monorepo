@@ -13,12 +13,13 @@ manifest.
     fetch-all --manifest P    use a different repos.json
 
 Report shape (see `Report` and `RepoStatus` below). Each repo carries an `issues` list with
-`severity` error|warning|info and a `kind` the watcher can switch on:
+`severity` error|warning|info|debug and a `kind` the watcher can switch on:
 
     error    not-cloned, fetch-failed, git-failed
     warning  diverged, behind, upstream-gone, needs-main-merge, auto-pull-skipped,
              auto-pull-failed
     info     ahead, no-upstream, dirty, detached, auto-pulled
+    debug    (none yet; for diagnostics a watcher may show but should never alert on)
 
 A repo with `"auto-pull": true` in repos.json has its manifest branch fast-forwarded right after
 the fetch, when that is safe: the branch is strictly behind its upstream (never diverged or
@@ -45,7 +46,7 @@ MAIN = "main"
 REMOTE = "origin"
 GIT_TIMEOUT_S = 120
 
-Severity = Literal["error", "warning", "info"]
+Severity = Literal["error", "warning", "info", "debug"]
 BranchState = Literal["in-sync", "ahead", "behind", "diverged", "upstream-gone", "no-upstream"]
 
 
@@ -119,6 +120,7 @@ class Summary:
     errors: int
     warnings: int
     infos: int
+    debugs: int
 
 
 @dataclass(slots=True, frozen=True)
@@ -449,7 +451,7 @@ def build_report(root: Path, manifest: Path, do_fetch: bool) -> Report:
                 repos,
             )
         )
-    counts = {"error": 0, "warning": 0, "info": 0}
+    counts = {"error": 0, "warning": 0, "info": 0, "debug": 0}
     for status in statuses:
         for issue in status.issues:
             counts[issue.severity] += 1
@@ -464,6 +466,7 @@ def build_report(root: Path, manifest: Path, do_fetch: bool) -> Report:
             errors=counts["error"],
             warnings=counts["warning"],
             infos=counts["info"],
+            debugs=counts["debug"],
         ),
     )
 
