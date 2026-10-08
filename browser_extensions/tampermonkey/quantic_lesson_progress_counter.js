@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Quantic Lesson Progress Counter
 // @namespace    http://tampermonkey.net
-// @version      1.2
+// @version      1.3
 // @description  Counts filled progress indicators vs total indicators and displays a temporary notification.
 // @author       Neil Hendren
 // @updateURL    https://raw.githubusercontent.com/NeilTheSeal/quantic_ai_monorepo/refs/heads/main/browser_extensions/tampermonkey/quantic_lesson_progress_counter.js
@@ -14,6 +14,8 @@
 
 (() => {
   "use strict";
+
+  // Test to see if version bump causes a million sync updates
 
   let lastCountKey = "";
 
