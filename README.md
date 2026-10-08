@@ -35,7 +35,7 @@ quantic_ai_monorepo/
 │   └── settings.json                # Hooks and permissions (Claude Code only)
 ├── .github/
 │   └── copilot-instructions.md      # GitHub Copilot entry point; defers to CLAUDE.md
-├── .githooks/pre-commit             # Ruff + mypy on staged Python files
+├── .githooks/                       # pre-commit (Ruff + mypy), post-merge (re-install deps)
 ├── .vscode/                         # Shared editor settings and recommended extensions
 ├── scripts/                         # pull-all, fetch-all (JSON sync report), type/lint/format-check-all
 ├── CLAUDE.md                        # Shared AI assistant context (Claude Code + Copilot)
@@ -160,10 +160,13 @@ Requires **Python 3.14.8**, pinned in [.python-version](.python-version).
 
 ### Git hooks
 
-Enable the pre-commit hook once per clone:
+Enable the hooks once per clone, in this repo and in each nested repo (they ship their own
+copy of `.githooks/`):
 
 ```bash
 git config core.hooksPath .githooks
+git -C browser_extensions/sync_server config core.hooksPath .githooks
+git -C browser_extensions/repo_watch config core.hooksPath .githooks
 ```
 
 ## Development workflow
@@ -190,6 +193,15 @@ Code standards enforced by the config:
 
 [.githooks/pre-commit](.githooks/pre-commit) runs `ruff check` and `mypy` on **staged** `.py` and
 `.pyi` files, and blocks the commit if either fails. It needs the root `.venv` to exist.
+
+### Post-merge hook
+
+[.githooks/post-merge](.githooks/post-merge) runs after every pull (any merge, fast-forward
+included). It runs `npm ci` when `package.json` or `package-lock.json` changed, `pip install -r
+requirements.txt` into `.venv` when `requirements.txt` or `pyproject.toml` changed, and, in a repo
+whose `package.json` has an `install-local` script (the repo_watch extension), `npm run
+install-local` on every pull so the installed extension matches the pulled code. The nested repos
+carry an identical copy of the file.
 
 ### Editor behavior
 

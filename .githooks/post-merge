@@ -1,0 +1,39 @@
+#!/bin/sh
+# Re-install dependencies after a pull (git runs this after any merge, including a fast-forward).
+# Enable once per clone with: git config core.hooksPath .githooks
+#
+#   package.json / package-lock.json changed  -> npm ci
+#   requirements.txt / pyproject.toml changed -> .venv pip install -r requirements.txt
+#   package.json has an `install-local` script -> npm run install-local, on every pull
+#     (an extension must be rebuilt and re-installed for the pulled code to take effect)
+#
+# The same file lives in each nested repo; keep the copies identical.
+
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+changed() {
+  git diff --name-only ORIG_HEAD HEAD -- "$@" 2>/dev/null | grep -q .
+}
+
+if [ -f package.json ] && changed package.json package-lock.json; then
+  echo "post-merge: package config changed, running npm ci"
+  npm ci || exit 1
+fi
+
+if [ -f requirements.txt ] && changed requirements.txt pyproject.toml; then
+  if [ -x .venv/bin/python ]; then
+    PYTHON=.venv/bin/python
+  elif [ -x .venv/Scripts/python.exe ]; then
+    PYTHON=.venv/Scripts/python.exe
+  else
+    echo "post-merge: requirements.txt changed but .venv not found; install manually" >&2
+    exit 0
+  fi
+  echo "post-merge: requirements changed, running pip install -r requirements.txt"
+  "$PYTHON" -m pip install -r requirements.txt || exit 1
+fi
+
+if [ -f package.json ] && node -e 'process.exit((require("./package.json").scripts||{})["install-local"] ? 0 : 1)' 2>/dev/null; then
+  echo "post-merge: re-installing extension (npm run install-local)"
+  npm run install-local </dev/null || exit 1
+fi

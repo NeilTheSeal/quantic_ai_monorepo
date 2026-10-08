@@ -49,6 +49,14 @@ for repo in data["repositories"]:
 EOF
 )"
 
+# Fast-forward the checked-out main. Deliberately not `git pull`: pull merges whatever FETCH_HEAD
+# says, and FETCH_HEAD is appended to without locking, so a fetch running at the same time (VS
+# Code autofetch, the repo_watch extension) leaves two `main` lines in it and pull fails with
+# "Cannot fast-forward to multiple branches". The remote-tracking ref has no such race.
+ff_main() {
+  git -C "$1" fetch origin main && git -C "$1" merge --ff-only refs/remotes/origin/main
+}
+
 failed=0
 while IFS=$'\t' read -r rel url others; do
   [ -n "${rel}" ] || continue
@@ -90,14 +98,16 @@ while IFS=$'\t' read -r rel url others; do
 
   branch="$(git -C "${dir}" branch --show-current)"
   if [ "${branch}" = "main" ]; then
-    cmd=(git -C "${dir}" pull --ff-only origin main)
+    cmd=(ff_main "${dir}")
+    desc="git fetch origin main && git merge --ff-only refs/remotes/origin/main"
   else
     echo "note ${label}: on '${branch}', updating local main without touching the worktree" >&2
     cmd=(git -C "${dir}" fetch origin main:main)
+    desc="${cmd[*]}"
   fi
 
   if [ "${dry_run}" -eq 1 ]; then
-    echo "   would run: ${cmd[*]}"
+    echo "   would run: ${desc}"
     git -C "${dir}" fetch --dry-run origin main 2>&1 | sed 's/^/   /' || failed=$((failed + 1))
   else
     "${cmd[@]}" 2>&1 | sed 's/^/   /' || failed=$((failed + 1))
