@@ -59,8 +59,8 @@
       "branch": "main",
       "remotes": {
         "origin": {
-          "fetch": "https://github.com/NeilTheSeal/anthropic_personal_chat",
-          "push": "https://github.com/NeilTheSeal/anthropic_personal_chat"
+          "fetch": "git@github.com:NeilTheSeal/anthropic_personal_chat.git",
+          "push": "git@github.com:NeilTheSeal/anthropic_personal_chat.git"
         },
         "heroku": {
           "fetch": "https://git.heroku.com/anthropic-personal-chat.git",
