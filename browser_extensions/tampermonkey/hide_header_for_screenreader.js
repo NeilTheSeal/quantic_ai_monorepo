@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         Hide Header for Screenreader
 // @namespace    http://tampermonkey.net/
-// @version      1.2
+// @version      1.3
 // @description  Hide elements on Quantic pages
 // @author       Neil Hendren
 // @updateURL    https://raw.githubusercontent.com/NeilTheSeal/quantic_ai_monorepo/refs/heads/main/browser_extensions/tampermonkey/hide_header_for_screenreader.js
 // @downloadURL  https://raw.githubusercontent.com/NeilTheSeal/quantic_ai_monorepo/refs/heads/main/browser_extensions/tampermonkey/hide_header_for_screenreader.js
-// @match        https://app.quantic.edu/*
-// @match        https://*.quantic.edu/*
+// @match        https://app.quantic.edu/course/*/lesson/*
+// @match        https://*.quantic.edu/course/*/lesson/*
 // @run-at       document-idle
 // @grant        none
 // ==/UserScript==
