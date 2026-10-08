@@ -1,12 +1,7 @@
 {
-  // One folder per repo in repos.json, so Source Control shows each of them. The monorepo must
-  // stay first: settings below refer to it by name.
-  "folders": [
-    { "name": "quantic_ai_monorepo", "path": ".." },
-    { "name": "sync_server", "path": "../browser_extensions/sync_server" },
-    { "name": "sync_files", "path": "../browser_extensions/sync_server/sync_files" },
-    { "name": "repo_watch", "path": "../browser_extensions/repo_watch" },
-  ],
+  // One folder. Nested repos from repos.json are added to Source Control by the repo_watch
+  // extension; the folder is named because the terminal PATH below refers to it by name.
+  "folders": [{ "name": "quantic_ai_monorepo", "path": ".." }],
   "settings": {
     "black-formatter.enabled": false,
     "pylint.enabled": false,
@@ -27,8 +22,8 @@
     "repoWatch.toastSeverities": ["error", "warning"],
     "repoWatch.enabled": true,
     "repoWatch.intervalMinutes": 10,
-    "repoWatch.runOnStartup": false,
-    "repoWatch.fetchAll.script": "${workspaceFolder}/scripts/fetch-all",
+    "repoWatch.runOnStartup": true,
+    "repoWatch.fetchAll.script": "${workspaceFolder:quantic_ai_monorepo}/scripts/fetch-all",
     "repoWatch.fetchAll.python": "python3",
   },
 }

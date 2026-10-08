@@ -6,10 +6,12 @@
       "type": "extensionHost",
       "request": "launch",
       "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}/browser_extensions/repo_watch",
-        "${workspaceFolder}"
+        "--extensionDevelopmentPath=${workspaceFolder:quantic_ai_monorepo}/browser_extensions/repo_watch",
+        "${workspaceFolder:quantic_ai_monorepo}"
       ],
-      "outFiles": ["${workspaceFolder}/browser_extensions/repo_watch/out/**/*.js"],
+      "outFiles": [
+        "${workspaceFolder:quantic_ai_monorepo}/browser_extensions/repo_watch/out/**/*.js"
+      ],
       "preLaunchTask": "build repo_watch"
     }
   ]

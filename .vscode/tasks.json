@@ -6,7 +6,7 @@
       // workspace opens. VS Code asks once to allow automatic tasks for this folder.
       "label": "pull-all on open",
       "type": "shell",
-      "command": "${workspaceFolder}/scripts/pull-all",
+      "command": "${workspaceFolder:quantic_ai_monorepo}/scripts/pull-all",
       "runOptions": {
         "runOn": "folderOpen"
       },
@@ -23,7 +23,7 @@
       "type": "shell",
       "command": "npm run build",
       "options": {
-        "cwd": "${workspaceFolder}/browser_extensions/repo_watch"
+        "cwd": "${workspaceFolder:quantic_ai_monorepo}/browser_extensions/repo_watch"
       },
       "problemMatcher": "$tsc",
       "presentation": {
