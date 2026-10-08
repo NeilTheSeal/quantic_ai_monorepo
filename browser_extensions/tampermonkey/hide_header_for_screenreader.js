@@ -4,6 +4,8 @@
 // @version      1.1
 // @description  Hide elements on Quantic pages
 // @author       You
+// @updateURL    https://raw.githubusercontent.com/NeilTheSeal/quantic_ai_monorepo/refs/heads/main/browser_extensions/tampermonkey/hide_header_for_screenreader.txt
+// @downloadURL  https://raw.githubusercontent.com/NeilTheSeal/quantic_ai_monorepo/refs/heads/main/browser_extensions/tampermonkey/hide_header_for_screenreader.txt
 // @match        https://app.quantic.edu/*
 // @match        https://*.quantic.edu/*
 // @run-at       document-idle
