@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Copy the shared config files (see lib/shared-files.sh) into nested repos.
+#
+#   sync-shared-files              every nested repo in repos.json whose directory exists
+#   sync-shared-files <dir>...     only these nested repo directories
+#   sync-shared-files --check ...  report stale copies instead of updating them (exit 1 if any)
+#
+# Copies are also refreshed automatically by each nested repo's pre-commit hook.
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+root="$(cd "${script_dir}/.." && pwd)"
+# shellcheck source=lib/shared-files.sh
+. "${script_dir}/lib/shared-files.sh"
+
+mode=sync
+if [ "${1:-}" = "--check" ]; then
+  mode=check
+  shift
+fi
+
+targets=("$@")
+if [ "${#targets[@]}" -eq 0 ]; then
+  if ! command -v python3 >/dev/null; then
+    echo "sync-shared-files: python3 is required to read repos.json" >&2
+    exit 1
+  fi
+  while IFS= read -r path; do
+    [ "${path}" = "." ] && continue
+    # Data-only repos (no package.json or pyproject.toml) have nothing to type-check or format.
+    if [ -f "${root}/${path}/package.json" ] || [ -f "${root}/${path}/pyproject.toml" ]; then
+      targets+=("${root}/${path}")
+    fi
+  done < <(python3 -c 'import json,sys; [print(r["path"]) for r in json.load(open(sys.argv[1]))["repositories"]]' "${root}/repos.json")
+fi
+
+status=0
+for target in "${targets[@]}"; do
+  target="$(cd "${target}" && pwd)"
+  if [ "${mode}" = check ]; then
+    check_shared_files "${target}" || status=1
+  else
+    sync_shared_files "${target}"
+  fi
+done
+if [ "${mode}" = check ] && [ "${status}" -eq 0 ]; then
+  echo "All shared config copies are current (${#targets[@]} repos)"
+fi
+exit "${status}"

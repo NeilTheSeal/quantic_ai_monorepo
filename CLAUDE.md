@@ -99,7 +99,10 @@ Some projects need their own repo. Course projects live at `courses/<course>/<pr
 their own `.git`, `.venv`, `pyproject.toml`, README, and CLAUDE.md; web apps and extensions live
 under `web_apps/` and `browser_extensions/` with their own `package.json`. Every nested repo is
 listed in the root `.gitignore` and in `repos.json` (which `scripts/pull-all` and `fetch-all`
-read), and ships its own copy of `.githooks/post-merge` and `.gitattributes`. Run `/new-project`
+read). Shared config files (`tsconfig.base.json`, `.prettierrc.json`, `.gitattributes`,
+`.githooks/`) are generated copies: the list is in `scripts/lib/shared-files.sh`, the nested
+pre-commit hook refreshes and stages them, and `scripts/sync-shared-files` does it for every
+repo. Edit the root originals only. Run `/new-project`
 to scaffold a course project; it writes the files and prints the git commands for Neil to run.
 Inside a nested project, its CLAUDE.md adds to this one.
 

@@ -37,9 +37,9 @@ quantic_ai_monorepo/
 │   └── settings.json                # Hooks and permissions (Claude Code only)
 ├── .github/
 │   └── copilot-instructions.md      # GitHub Copilot entry point; defers to CLAUDE.md
-├── .githooks/                       # pre-commit (Ruff + mypy), post-merge (re-install deps)
+├── .githooks/                       # pre-commit (Ruff + mypy), post-merge, nested-pre-commit (shared copies)
 ├── .vscode/                         # Shared editor settings and recommended extensions
-├── scripts/                         # pull-all, fetch-all (JSON sync report), type/lint/format-check-all
+├── scripts/                         # pull-all, fetch-all, sync-shared-files, type/lint/format-check-all
 ├── CLAUDE.md                        # Shared AI assistant context (Claude Code + Copilot)
 ├── eslint.config.js                 # Shared ESLint rules for every JS/TS project
 ├── .prettierrc.json                 # Shared Prettier settings (.prettierignore excludes Python etc.)
@@ -171,6 +171,17 @@ git -C browser_extensions/sync_server config core.hooksPath .githooks
 git -C browser_extensions/repo_watch config core.hooksPath .githooks
 git -C web_apps/anthropic_personal_chat config core.hooksPath .githooks
 ```
+
+### Shared config in nested repos
+
+A nested repo must build on its own (Heroku clones only that repo), so it cannot reach
+`../../tsconfig.base.json`. Instead each nested repo carries generated copies of the shared files
+listed in [scripts/lib/shared-files.sh](scripts/lib/shared-files.sh): `tsconfig.base.json`,
+`.prettierrc.json`, `.gitattributes`, `.githooks/post-merge`, and the nested `pre-commit` hook
+itself. The hook refreshes and stages the copies on every commit made inside the monorepo, and
+does nothing in a standalone clone. After changing a root original, run
+[scripts/sync-shared-files](scripts/sync-shared-files) (or `--check` to list stale copies) and
+commit each nested repo. Never edit a copy.
 
 ## Development workflow
 

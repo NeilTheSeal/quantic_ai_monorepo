@@ -21,8 +21,10 @@ paths:
     Prettier handles JS/TS, JSON, YAML, CSS, HTML and Markdown only. Python, TOML, shell and
     lockfiles are ignored; they have their own formatters.
   - [tsconfig.base.json](../../tsconfig.base.json): strictness flags. A project's `tsconfig.json`
-    does `"extends": "../../tsconfig.base.json"` and adds only compiler/emit settings (target,
-    module, outDir, include). Emit-specific settings go in a `tsconfig.build.json` when the
+    does `"extends": "./tsconfig.base.json"` against a generated copy in the project (see
+    [scripts/lib/shared-files.sh](../../scripts/lib/shared-files.sh); the nested pre-commit hook
+    refreshes it) and adds only compiler/emit settings (target, module, outDir, include). Never
+    edit the copy. Emit-specific settings go in a `tsconfig.build.json` when the
     main tsconfig also covers tests.
   - The tools install once at the root (`npm install` in the repo root; devDependencies in the
     root [package.json](../../package.json)). Project `node_modules/` hold only the project's

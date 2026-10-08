@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Pre-commit hook for a nested repo (installed as .githooks/pre-commit by sync-shared-files).
+# Refreshes this repo's copies of the monorepo's shared config files and stages them, so every
+# commit ships current copies and the repo still builds on its own (Heroku, a fresh clone).
+# Outside the monorepo there is no source to copy from, so the hook does nothing.
+# Enable once per clone with: git config core.hooksPath .githooks
+set -euo pipefail
+
+nested="$(git rev-parse --show-toplevel)"
+dir="${nested}"
+while [ "${dir}" != "/" ]; do
+  dir="$(dirname "${dir}")"
+  if [ -f "${dir}/repos.json" ] && [ -f "${dir}/scripts/lib/shared-files.sh" ]; then
+    # shellcheck source=/dev/null
+    . "${dir}/scripts/lib/shared-files.sh"
+    sync_shared_files "${nested}" --stage
+    exit 0
+  fi
+done
+exit 0
