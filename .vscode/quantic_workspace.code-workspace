@@ -1,8 +1,11 @@
 {
+  // One folder per repo in repos.json, so Source Control shows each of them. The monorepo must
+  // stay first: settings below refer to it by name.
   "folders": [
-    {
-      "path": "..",
-    },
+    { "name": "quantic_ai_monorepo", "path": ".." },
+    { "name": "sync_server", "path": "../browser_extensions/sync_server" },
+    { "name": "sync_files", "path": "../browser_extensions/sync_server/sync_files" },
+    { "name": "repo_watch", "path": "../browser_extensions/repo_watch" },
   ],
   "settings": {
     "black-formatter.enabled": false,
@@ -13,12 +16,13 @@
 
     // Repo scripts (type-check-all, lint-check-all, format-check-all) on PATH in the terminal.
     // Window-scoped, so it must live here rather than in .vscode/settings.json.
-    // ${workspaceFolder} is the first folder above: the repo root.
+    // Named folder, not ${workspaceFolder}: with several folders that would resolve to whichever
+    // folder a terminal opens in.
     "terminal.integrated.env.linux": {
-      "PATH": "${workspaceFolder}/scripts:${env:PATH}",
+      "PATH": "${workspaceFolder:quantic_ai_monorepo}/scripts:${env:PATH}",
     },
     "terminal.integrated.env.osx": {
-      "PATH": "${workspaceFolder}/scripts:${env:PATH}",
+      "PATH": "${workspaceFolder:quantic_ai_monorepo}/scripts:${env:PATH}",
     },
     "repoWatch.toastSeverities": ["error", "warning"],
     "repoWatch.enabled": true,
