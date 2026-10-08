@@ -5,9 +5,10 @@
 #   pull-all            fast-forward main in each repo
 #   pull-all --dry-run  show what would be fetched without changing anything
 #
-# A repo checked out on another branch gets its local main fast-forwarded in place
-# (`git fetch origin main:main`) so the working tree is not disturbed. A repo whose path is
-# missing is reported and skipped; cloning is a separate step.
+# A repo whose path does not exist yet is cloned first (`main` only). Remotes listed in
+# repos.json that the clone lacks (e.g. heroku) are added. A repo checked out on another branch
+# gets its local main fast-forwarded in place (`git fetch origin main:main`) so the working tree
+# is not disturbed.
 set -euo pipefail
 
 dry_run=0
@@ -31,31 +32,56 @@ for tool in git python3; do
   fi
 done
 
-# One "path<TAB>origin-fetch-url" line per repo that has an origin remote.
+# One "path<TAB>origin-url<TAB>name=url name=url…" line per repo that has an origin remote; the
+# third field lists the other remotes so they can be added to a fresh clone.
 repos="$(python3 - "${manifest}" <<'EOF'
 import json, sys
 with open(sys.argv[1], encoding="utf-8") as f:
     data = json.load(f)
 for repo in data["repositories"]:
-    origin = repo.get("remotes", {}).get("origin")
+    remotes = repo.get("remotes", {})
+    origin = remotes.get("origin")
     if origin is None:
         print(f"{repo['name']}: no origin remote in repos.json, skipped", file=sys.stderr)
         continue
-    print(f"{repo['path']}\t{origin['fetch']}")
+    others = " ".join(f"{n}={r['fetch']}" for n, r in remotes.items() if n != "origin")
+    print(f"{repo['path']}\t{origin['fetch']}\t{others}")
 EOF
 )"
 
 failed=0
-while IFS=$'\t' read -r rel url; do
+while IFS=$'\t' read -r rel url others; do
   [ -n "${rel}" ] || continue
   dir="${root}/${rel}"
   if [ "${rel}" = "." ]; then dir="${root}"; fi
   label="${rel}"
+  echo "== ${label}"
 
   if [ ! -d "${dir}/.git" ]; then
-    echo "skip ${label}: not cloned (${url})" >&2
-    continue
+    echo "   not cloned; cloning main from ${url}"
+    if [ "${dry_run}" -eq 1 ]; then
+      echo "   would run: git clone --branch main --single-branch ${url} ${dir}"
+      continue
+    fi
+    if ! git clone --branch main --single-branch "${url}" "${dir}" 2>&1 | sed 's/^/   /'; then
+      failed=$((failed + 1))
+      continue
+    fi
   fi
+
+  # Remotes the manifest knows about but the clone does not (a fresh clone has only origin).
+  for pair in ${others}; do
+    name="${pair%%=*}"
+    remote_url="${pair#*=}"
+    if ! git -C "${dir}" remote get-url "${name}" >/dev/null 2>&1; then
+      if [ "${dry_run}" -eq 1 ]; then
+        echo "   would run: git remote add ${name} ${remote_url}"
+      else
+        git -C "${dir}" remote add "${name}" "${remote_url}"
+        echo "   added remote ${name} -> ${remote_url}"
+      fi
+    fi
+  done
 
   actual="$(git -C "${dir}" remote get-url origin 2>/dev/null || true)"
   if [ "${actual}" != "${url}" ]; then
@@ -70,7 +96,6 @@ while IFS=$'\t' read -r rel url; do
     cmd=(git -C "${dir}" fetch origin main:main)
   fi
 
-  echo "== ${label}"
   if [ "${dry_run}" -eq 1 ]; then
     echo "   would run: ${cmd[*]}"
     git -C "${dir}" fetch --dry-run origin main 2>&1 | sed 's/^/   /' || failed=$((failed + 1))
