@@ -20,4 +20,4 @@ CLAUDE.local.md
 .claude/worktrees/
 
 # --- Nested project repositories (each has its own .git; see README.md) ---
-browser_extensions/tampermonkey/sync_files/
+browser_extensions/**/sync_files/
