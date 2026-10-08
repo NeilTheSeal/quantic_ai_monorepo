@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Run lint checks in every project of the monorepo (Node and Python). Failures only; see lib.
+set -euo pipefail
+# shellcheck source=lib/check-all.sh
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/check-all.sh"
+run_check_all lint

@@ -10,5 +10,15 @@
     "ms-python.black-formatter.enabled": false,
     "ms-python.pylint.enabled": false,
     "editor.formatOnSave": true,
+
+    // Repo scripts (type-check-all, lint-check-all, format-check-all) on PATH in the terminal.
+    // Window-scoped, so it must live here rather than in .vscode/settings.json.
+    // ${workspaceFolder} is the first folder above: the repo root.
+    "terminal.integrated.env.linux": {
+      "PATH": "${workspaceFolder}/scripts:${env:PATH}",
+    },
+    "terminal.integrated.env.osx": {
+      "PATH": "${workspaceFolder}/scripts:${env:PATH}",
+    },
   },
 }
