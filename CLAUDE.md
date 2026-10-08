@@ -47,6 +47,8 @@ no real fix, and then say why in the comment.
   or notebooks. `course_name` is the snake_case course title.
 - `courses/<course_name>/<project_name>/` — a course project. Larger ones are nested git repos
   (see below).
+- `web_apps/<app_name>/` — web applications that are not coursework (nested git repos, Node).
+- `browser_extensions/` — userscripts, a VS Code extension, and the sync server (nested repos).
 - `.claude/` — rules, skills, agents, hooks, settings. `.github/copilot-instructions.md` points
   Copilot here; both tools read this file.
 - Put new lesson work under its course folder. Run `/new-lesson` to scaffold one.
@@ -93,10 +95,13 @@ the repo's existing style: imperative mood, under 72 characters, no trailing per
 
 ## Nested project repositories
 
-Some course projects need their own repo. They live at `courses/<course>/<project>/` with their
-own `.git`, `.venv`, `pyproject.toml`, README, and CLAUDE.md, and are listed in the root
-`.gitignore`. Run `/new-project` to scaffold one; it writes the files and prints the git commands
-for Neil to run. Inside a nested project, its CLAUDE.md adds to this one.
+Some projects need their own repo. Course projects live at `courses/<course>/<project>/` with
+their own `.git`, `.venv`, `pyproject.toml`, README, and CLAUDE.md; web apps and extensions live
+under `web_apps/` and `browser_extensions/` with their own `package.json`. Every nested repo is
+listed in the root `.gitignore` and in `repos.json` (which `scripts/pull-all` and `fetch-all`
+read), and ships its own copy of `.githooks/post-merge` and `.gitattributes`. Run `/new-project`
+to scaffold a course project; it writes the files and prints the git commands for Neil to run.
+Inside a nested project, its CLAUDE.md adds to this one.
 
 ## Skills and agents
 

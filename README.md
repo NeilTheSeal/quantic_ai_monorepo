@@ -27,6 +27,8 @@ quantic_ai_monorepo/
 │   ├── tampermonkey/                # Userscripts, installed by URL; not linted or formatted
 │   ├── sync_server/                 # WebDAV sync server on Heroku (own git repo, gitignored)
 │   └── repo_watch/                  # VS Code extension: fetch-all on a timer, toasts + Problems
+├── web_apps/
+│   └── anthropic_personal_chat/     # Claude chat UI: React + Express proxy on Heroku (own git repo)
 ├── .claude/                         # AI assistant config (Claude Code; Copilot reads most of it)
 │   ├── agents/                      # Subagents: reviewer, researcher
 │   ├── hooks/                       # Python hook scripts (git guard, secret guard, post-edit checks)
@@ -167,6 +169,7 @@ copy of `.githooks/`):
 git config core.hooksPath .githooks
 git -C browser_extensions/sync_server config core.hooksPath .githooks
 git -C browser_extensions/repo_watch config core.hooksPath .githooks
+git -C web_apps/anthropic_personal_chat config core.hooksPath .githooks
 ```
 
 ## Development workflow
@@ -259,7 +262,13 @@ To add one:
 
 Run `git` commands from inside the nested project's directory to work with its own history.
 
-> **Note:** There are no nested repos yet. This section will list them as they are added.
+Nested repos in this tree (all listed in [repos.json](repos.json)):
+
+| Path                                                                   | What it is                                                      |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------- |
+| [browser_extensions/sync_server/](browser_extensions/sync_server/)     | WebDAV sync server on Heroku, backed by a GitHub repo           |
+| [browser_extensions/repo_watch/](browser_extensions/repo_watch/)       | VS Code extension that runs `fetch-all` on a timer              |
+| [web_apps/anthropic_personal_chat/](web_apps/anthropic_personal_chat/) | Single-user Claude chat UI: React client, Express proxy, Heroku |
 
 ## AI coding assistants
 

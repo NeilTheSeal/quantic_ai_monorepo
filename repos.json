@@ -52,6 +52,22 @@
         }
       },
       "auto-pull": false
+    },
+    {
+      "name": "anthropic_personal_chat",
+      "path": "web_apps/anthropic_personal_chat",
+      "branch": "main",
+      "remotes": {
+        "origin": {
+          "fetch": "https://github.com/NeilTheSeal/anthropic_personal_chat",
+          "push": "https://github.com/NeilTheSeal/anthropic_personal_chat"
+        },
+        "heroku": {
+          "fetch": "https://git.heroku.com/anthropic-personal-chat.git",
+          "push": "https://git.heroku.com/anthropic-personal-chat.git"
+        }
+      },
+      "auto-pull": false
     }
   ]
 }

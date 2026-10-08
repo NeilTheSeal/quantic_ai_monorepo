@@ -29,6 +29,20 @@
       "presentation": {
         "reveal": "silent"
       }
+    },
+    {
+      // Express (watch) + Vite dev server for the chat app; see its README for the URL.
+      "label": "dev anthropic_personal_chat",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder:quantic_ai_monorepo}/web_apps/anthropic_personal_chat"
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "panel": "dedicated"
+      }
     }
   ]
 }
