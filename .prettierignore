@@ -1,0 +1,34 @@
+# Prettier handles JS/TS, JSON, Markdown, YAML, CSS, HTML only. Everything else has its own
+# formatter (Ruff for Python, shell-format for shell, Even Better TOML for TOML) or is generated.
+*.py
+*.pyi
+*.ipynb
+*.toml
+*.sh
+*.lock
+package-lock.json
+requirements*.txt
+.venv/
+**/.venv/
+node_modules/
+**/node_modules/
+**/dist/
+**/build/
+**/coverage/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+__pycache__/
+.git/
+.githooks/
+# Tampermonkey userscripts are kept byte-for-byte as installed
+browser_extensions/tampermonkey/
+# synced storage repo (its own git repo)
+browser_extensions/sync_server/sync_files/
+# Image/binary assets
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.pdf

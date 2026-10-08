@@ -34,6 +34,10 @@ quantic_ai_monorepo/
 ├── .githooks/pre-commit             # Ruff + mypy on staged Python files
 ├── .vscode/                         # Shared editor settings and recommended extensions
 ├── CLAUDE.md                        # Shared AI assistant context (Claude Code + Copilot)
+├── eslint.config.js                 # Shared ESLint rules for every JS/TS project
+├── .prettierrc.json                 # Shared Prettier settings (.prettierignore excludes Python etc.)
+├── tsconfig.base.json               # Shared TypeScript strictness; projects extend it
+├── package.json                     # Root devDependencies: eslint, prettier, typescript
 ├── pyproject.toml                   # Project metadata, Ruff, mypy, pytest config
 ├── requirements.txt                 # Python dependencies for the root .venv
 └── .python-version                  # Pinned Python version (3.14.8)
@@ -63,7 +67,12 @@ Every toolchain is project-local:
 
 - **Python**: a `.venv/` virtual environment. The root `.venv` serves code under `courses/`, and a
   standalone project can have its own.
-- **Node.js** (when needed): a `node_modules/` folder in each project.
+- **Node.js** (when needed): a `node_modules/` folder in each project for its own dependencies.
+  ESLint, Prettier and TypeScript install once at the repo root (`npm install` here) and their
+  configuration is shared: [eslint.config.js](eslint.config.js),
+  [.prettierrc.json](.prettierrc.json), [.prettierignore](.prettierignore) and
+  [tsconfig.base.json](tsconfig.base.json). A project's `tsconfig.json` extends the base and
+  adds only compiler settings.
 
 Nothing should be installed globally beyond the interpreters themselves (managed by pyenv).
 

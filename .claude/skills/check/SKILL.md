@@ -28,6 +28,7 @@ Run every gate and report. Target: `$ARGUMENTS` if given, otherwise the Python f
 
    Status is `pass`, `fail`, or `skipped`. Details is the first line of the failure or the count
    of files checked.
+
 4. Under the table, show at most the first 30 lines of output for each failing gate.
 
 ## Rules

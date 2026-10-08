@@ -21,7 +21,7 @@ the description. Templates live in `${CLAUDE_SKILL_DIR}/templates/`.
    - `README.md` → `courses/$0/$1/README.md`
    - `gitignore` → `courses/$0/$1/.gitignore`
    - `requirements.txt` → `courses/$0/$1/requirements.txt`
-   Copy `.python-version`, `.gitattributes`, and `.githooks/` from the monorepo root unchanged.
+     Copy `.python-version`, `.gitattributes`, and `.githooks/` from the monorepo root unchanged.
 3. Add `courses/$0/$1/` to the root `.gitignore` under the nested repositories section, and add
    the project to the nested repositories note in the root `README.md`.
 4. Create the venv from inside the project dir: `python -m venv .venv` (pyenv resolves
