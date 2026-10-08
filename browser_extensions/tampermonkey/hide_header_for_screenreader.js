@@ -4,29 +4,29 @@
 // @version      1.1
 // @description  Hide elements on Quantic pages
 // @author       You
-// @updateURL    https://raw.githubusercontent.com/NeilTheSeal/quantic_ai_monorepo/refs/heads/main/browser_extensions/tampermonkey/hide_header_for_screenreader.txt
-// @downloadURL  https://raw.githubusercontent.com/NeilTheSeal/quantic_ai_monorepo/refs/heads/main/browser_extensions/tampermonkey/hide_header_for_screenreader.txt
+// @updateURL    https://raw.githubusercontent.com/NeilTheSeal/quantic_ai_monorepo/refs/heads/main/browser_extensions/tampermonkey/hide_header_for_screenreader.js
+// @downloadURL  https://raw.githubusercontent.com/NeilTheSeal/quantic_ai_monorepo/refs/heads/main/browser_extensions/tampermonkey/hide_header_for_screenreader.js
 // @match        https://app.quantic.edu/*
 // @match        https://*.quantic.edu/*
 // @run-at       document-idle
 // @grant        none
 // ==/UserScript==
 
-(function() {
-    'use strict';
+(function () {
+  "use strict";
 
-    console.log("Now hiding header...");
+  console.log("Now hiding header...");
 
-    // Example using MutationObserver to account for dynamic SPA rendering:
-    const observer = new MutationObserver((mutations, obs) => {
-        const header = document.querySelector('.app-header'); // Adjust selector to target exact header
-        if (header) {
-            header.style.display = "none";
-        }
-    });
+  // Example using MutationObserver to account for dynamic SPA rendering:
+  const observer = new MutationObserver((mutations, obs) => {
+    const header = document.querySelector(".app-header"); // Adjust selector to target exact header
+    if (header) {
+      header.style.display = "none";
+    }
+  });
 
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
 })();
