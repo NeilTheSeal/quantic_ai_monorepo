@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Focus Componentized Continue Button
 // @namespace    http://tampermonkey.net
-// @version      1.3
+// @version      1.4
 // @description  Waits for continue button to appear across SPA page updates and focuses it.
 // @author       Neil Hendren
 // @updateURL    https://raw.githubusercontent.com/NeilTheSeal/quantic_ai_monorepo/refs/heads/main/browser_extensions/tampermonkey/focus_componentized_continue_button.js
@@ -51,6 +51,8 @@
   }
 
   function checkAndFocusButton() {
+    console.log("[Tampermonkey] Checking for continue button...");
+
     const targetElement = document.querySelector("button.flat.green");
 
     // Only process if the button exists, is visible, hasn't already been processed, and cooldown has elapsed

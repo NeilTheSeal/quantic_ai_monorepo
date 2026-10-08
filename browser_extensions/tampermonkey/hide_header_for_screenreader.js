@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Hide Header for Screenreader
 // @namespace    http://tampermonkey.net/
-// @version      1.3
+// @version      1.4
 // @description  Hide elements on Quantic pages
 // @author       Neil Hendren
 // @updateURL    https://raw.githubusercontent.com/NeilTheSeal/quantic_ai_monorepo/refs/heads/main/browser_extensions/tampermonkey/hide_header_for_screenreader.js
@@ -22,6 +22,12 @@
     const header = document.querySelector(".app-header"); // Adjust selector to target exact header
     if (header) {
       header.style.display = "none";
+      document.addEventListener("keydown", (e) => {
+        // Show header again when pressing ctrl+shift+s
+        if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "s") {
+          header.style.display = "";
+        }
+      });
     }
   });
 

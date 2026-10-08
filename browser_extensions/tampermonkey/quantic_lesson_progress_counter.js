@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Quantic Lesson Progress Counter
 // @namespace    http://tampermonkey.net
-// @version      1.1
+// @version      1.2
 // @description  Counts filled progress indicators vs total indicators and displays a temporary notification.
 // @author       Neil Hendren
 // @updateURL    https://raw.githubusercontent.com/NeilTheSeal/quantic_ai_monorepo/refs/heads/main/browser_extensions/tampermonkey/quantic_lesson_progress_counter.js
@@ -62,7 +62,7 @@
     const timeoutId = setTimeout(() => {
       toast.style.opacity = "0";
       toast.style.transform = "translateY(-10px)";
-    }, 3000);
+    }, 5000);
 
     toast.dataset.timeoutId = String(timeoutId);
   }
