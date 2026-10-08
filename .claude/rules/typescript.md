@@ -29,9 +29,10 @@ paths:
     own dependencies and `@types/*`.
 - Each project still has its own `package.json`, `node_modules/`, `tsconfig.json`, and `.nvmrc`,
   with the Node version pinned in `engines`.
-- Every project exposes these scripts: `dev`, `build`, `lint` (`eslint .`), `typecheck`
-  (`tsc --noEmit`), `test`, `format` (`prettier --write .`), `format:check`. Run
-  `npm run lint && npm run typecheck && npm test` before reporting done.
+- Every project exposes these scripts: `dev`, `build`, `lint-check` (`eslint .`), `type-check`
+  (`tsc --noEmit`), `test`, `format` (`prettier --write .`), `format-check`
+  (`prettier --check .`). Run `npm run lint-check && npm run type-check && npm test` before
+  reporting done.
 - No `any`; use `unknown` and narrow. Named exports only. `async/await`, not `.then()` chains.
   Data from the wire is `unknown` until a runtime guard has checked it; don't cast it.
 - Tests: `node --test` with files in `tests/` by default; Vitest when a project needs its
