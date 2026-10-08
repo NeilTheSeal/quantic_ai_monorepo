@@ -26,7 +26,15 @@ paths:
     main tsconfig also covers tests.
   - The tools install once at the root (`npm install` in the repo root; devDependencies in the
     root [package.json](../../package.json)). Project `node_modules/` hold only the project's
-    own dependencies and `@types/*`.
+    own dependencies, `@types/*`, and `typescript` (see next point).
+- Two TypeScript versions on purpose. Projects compile with `typescript@^7` (the native
+  compiler: only `tsc`, no JavaScript API). The root pins `typescript@^6` because
+  typescript-eslint needs the JS API and declares `typescript <6.1`; ESLint resolves it from the
+  root `node_modules`, `tsc` resolves from the project's. Do not "unify" them until
+  typescript-eslint supports TS 7 (tracked in typescript-eslint/typescript-eslint#10940). Options
+  removed in 7 that bite here: `moduleResolution: node10` (use `nodenext`, or `bundler` with
+  `module: commonjs`), `baseUrl`, `esModuleInterop: false`. The editor's TypeScript service is
+  VS Code's bundled TS 6; `typescript.tsdk` cannot point at a TS 7 package.
 - Each project still has its own `package.json`, `node_modules/`, `tsconfig.json`, and `.nvmrc`,
   with the Node version pinned in `engines`.
 - Every project exposes these scripts: `dev`, `build`, `lint-check` (`eslint .`), `type-check`
