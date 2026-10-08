@@ -13,7 +13,9 @@ requirements*.txt
 node_modules/
 **/node_modules/
 **/dist/
+**/out/
 **/build/
+*.vsix
 **/coverage/
 .mypy_cache/
 .ruff_cache/

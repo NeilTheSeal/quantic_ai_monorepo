@@ -1,0 +1,385 @@
+#!/usr/bin/env python3
+"""Fetch `origin` in every repository listed in repos.json and report sync state as JSON.
+
+Data goes to stdout as one JSON document; nothing else is printed there, so another program can
+read it directly (`fetch-all | jq`, or a subprocess with captured stdout). Diagnostics, when any,
+go to stderr. Exit code: 0 no error-level issues, 1 at least one repo has an error-level issue
+(not cloned, fetch failed, git failed; the JSON is still written), 2 bad usage or unreadable
+manifest.
+
+    fetch-all                 fetch, then report (compact JSON)
+    fetch-all --pretty        indented JSON
+    fetch-all --no-fetch      report from what is already known locally (no network)
+    fetch-all --manifest P    use a different repos.json
+
+Report shape (see `Report` and `RepoStatus` below). Each repo carries an `issues` list with
+`severity` error|warning|info and a `kind` the watcher can switch on:
+
+    error    not-cloned, fetch-failed, git-failed
+    warning  diverged, behind, upstream-gone, needs-main-merge
+    info     ahead, no-upstream, dirty, detached
+
+Only the standard library is used, so this runs with any Python 3.11+ without a venv.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import subprocess
+import sys
+import time
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Literal
+
+MAIN = "main"
+REMOTE = "origin"
+GIT_TIMEOUT_S = 120
+
+Severity = Literal["error", "warning", "info"]
+BranchState = Literal["in-sync", "ahead", "behind", "diverged", "upstream-gone", "no-upstream"]
+
+
+@dataclass(slots=True, frozen=True)
+class Issue:
+    severity: Severity
+    kind: str
+    message: str
+    branch: str | None = None
+
+
+@dataclass(slots=True, frozen=True)
+class Branch:
+    name: str
+    current: bool
+    upstream: str | None
+    # True when no upstream is configured but origin/<name> exists and was used for the counts.
+    upstream_implicit: bool
+    state: BranchState
+    ahead: int
+    behind: int
+    # Commits on origin/main that this branch does not have (0 for main itself).
+    behind_main: int
+
+
+@dataclass(slots=True, frozen=True)
+class Dirty:
+    staged: int
+    unstaged: int
+    untracked: int
+
+
+@dataclass(slots=True, frozen=True)
+class FetchResult:
+    ok: bool
+    duration_ms: int
+    error: str | None = None
+
+
+@dataclass(slots=True)
+class RepoStatus:
+    name: str
+    path: str
+    cloned: bool
+    fetch: FetchResult | None = None
+    current_branch: str | None = None
+    detached: bool = False
+    dirty: Dirty | None = None
+    branches: list[Branch] = field(default_factory=list)
+    remote_only: list[str] = field(default_factory=list)
+    issues: list[Issue] = field(default_factory=list)
+
+
+@dataclass(slots=True, frozen=True)
+class Summary:
+    ok: bool
+    repositories: int
+    errors: int
+    warnings: int
+    infos: int
+
+
+@dataclass(slots=True, frozen=True)
+class Report:
+    generated_at: str
+    root: str
+    fetched: bool
+    repositories: list[RepoStatus]
+    summary: Summary
+
+
+class GitError(RuntimeError):
+    """A git command failed; `output` holds its combined stderr/stdout."""
+
+    def __init__(self, cmd: list[str], output: str) -> None:
+        super().__init__(f"{' '.join(cmd)}: {output.strip()}")
+        self.output = output.strip()
+
+
+def git(repo: Path, *args: str) -> str:
+    cmd = ["git", "-C", str(repo), *args]
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=GIT_TIMEOUT_S, check=False)
+    if proc.returncode != 0:
+        raise GitError(cmd, proc.stderr or proc.stdout)
+    return proc.stdout
+
+
+def ref_exists(repo: Path, ref: str) -> bool:
+    try:
+        git(repo, "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}")
+    except GitError:
+        return False
+    return True
+
+
+def ahead_behind(repo: Path, branch: str, upstream: str) -> tuple[int, int]:
+    out = git(repo, "rev-list", "--left-right", "--count", f"{branch}...{upstream}")
+    ahead, behind = out.split()
+    return int(ahead), int(behind)
+
+
+def count_missing(repo: Path, branch: str, other: str) -> int:
+    """Commits reachable from `other` but not from `branch`."""
+    return int(git(repo, "rev-list", "--count", f"{branch}..{other}").strip())
+
+
+def worktree_dirty(repo: Path) -> Dirty:
+    staged = unstaged = untracked = 0
+    for line in git(repo, "status", "--porcelain", "--untracked-files=normal").splitlines():
+        if line.startswith("??"):
+            untracked += 1
+            continue
+        index, worktree = line[0], line[1]
+        if index not in " ?":
+            staged += 1
+        if worktree not in " ?":
+            unstaged += 1
+    return Dirty(staged=staged, unstaged=unstaged, untracked=untracked)
+
+
+def local_branches(repo: Path, current: str | None) -> list[tuple[str, str | None, bool]]:
+    """(name, configured upstream or None, upstream is gone) for every local branch."""
+    out = git(
+        repo,
+        "for-each-ref",
+        "refs/heads",
+        "--format=%(refname:short)%00%(upstream:short)%00%(upstream:track,nobracket)",
+    )
+    rows: list[tuple[str, str | None, bool]] = []
+    for line in out.splitlines():
+        name, upstream, track = line.split("\0")
+        rows.append((name, upstream or None, track.strip() == "gone"))
+    del current  # kept in the signature for symmetry with callers; not needed here
+    return rows
+
+
+def remote_branches(repo: Path) -> set[str]:
+    out = git(repo, "for-each-ref", f"refs/remotes/{REMOTE}", "--format=%(refname:short)")
+    prefix = f"{REMOTE}/"
+    return {
+        ref.removeprefix(prefix)
+        for ref in out.split()
+        if ref.startswith(prefix) and ref != f"{REMOTE}/HEAD"
+    }
+
+
+def classify(ahead: int, behind: int) -> BranchState:
+    if ahead and behind:
+        return "diverged"
+    if behind:
+        return "behind"
+    if ahead:
+        return "ahead"
+    return "in-sync"
+
+
+def inspect_branch(
+    repo: Path, name: str, upstream: str | None, gone: bool, current: bool, has_main: bool
+) -> tuple[Branch, list[Issue]]:
+    issues: list[Issue] = []
+    implicit = False
+    if upstream is None and name in remote_branches(repo):
+        upstream, implicit = f"{REMOTE}/{name}", True
+
+    if gone:
+        state: BranchState = "upstream-gone"
+        ahead = behind = 0
+        issues.append(
+            Issue("warning", "upstream-gone", f"{name}: upstream {upstream} no longer exists", name)
+        )
+    elif upstream is None:
+        state, ahead, behind = "no-upstream", 0, 0
+        issues.append(Issue("info", "no-upstream", f"{name} has no upstream on {REMOTE}", name))
+    else:
+        ahead, behind = ahead_behind(repo, name, upstream)
+        state = classify(ahead, behind)
+        if state == "diverged":
+            issues.append(
+                Issue(
+                    "warning",
+                    "diverged",
+                    f"{name} has diverged from {upstream}: {ahead} ahead, {behind} behind",
+                    name,
+                )
+            )
+        elif state == "behind":
+            issues.append(Issue("warning", "behind", f"{name} is {behind} behind {upstream}", name))
+        elif state == "ahead":
+            issues.append(Issue("info", "ahead", f"{name} is {ahead} ahead of {upstream}", name))
+
+    behind_main = 0
+    if name != MAIN and has_main:
+        behind_main = count_missing(repo, name, f"{REMOTE}/{MAIN}")
+        if behind_main:
+            issues.append(
+                Issue(
+                    "warning",
+                    "needs-main-merge",
+                    f"{name} is missing {behind_main} commits from {REMOTE}/{MAIN}",
+                    name,
+                )
+            )
+
+    return (
+        Branch(
+            name=name,
+            current=current,
+            upstream=upstream,
+            upstream_implicit=implicit,
+            state=state,
+            ahead=ahead,
+            behind=behind,
+            behind_main=behind_main,
+        ),
+        issues,
+    )
+
+
+def fetch(repo: Path) -> FetchResult:
+    started = time.monotonic()
+    try:
+        git(repo, "fetch", REMOTE, "--prune", "--quiet")
+    except (GitError, subprocess.TimeoutExpired) as exc:
+        detail = exc.output if isinstance(exc, GitError) else f"timed out after {GIT_TIMEOUT_S}s"
+        return FetchResult(ok=False, duration_ms=elapsed_ms(started), error=detail)
+    return FetchResult(ok=True, duration_ms=elapsed_ms(started))
+
+
+def elapsed_ms(started: float) -> int:
+    return round((time.monotonic() - started) * 1000)
+
+
+def inspect_repo(root: Path, name: str, rel: str, do_fetch: bool) -> RepoStatus:
+    repo = root if rel == "." else root / rel
+    status = RepoStatus(name=name, path=rel, cloned=(repo / ".git").exists())
+    if not status.cloned:
+        status.issues.append(Issue("error", "not-cloned", f"{rel} is not cloned (run pull-all)"))
+        return status
+
+    if do_fetch:
+        status.fetch = fetch(repo)
+        if not status.fetch.ok:
+            status.issues.append(
+                Issue("error", "fetch-failed", f"fetch from {REMOTE} failed: {status.fetch.error}")
+            )
+
+    try:
+        current = git(repo, "branch", "--show-current").strip() or None
+        status.current_branch = current
+        status.detached = current is None
+        status.dirty = worktree_dirty(repo)
+        has_main = ref_exists(repo, f"{REMOTE}/{MAIN}")
+        remote = remote_branches(repo)
+        local_names: set[str] = set()
+        for bname, upstream, gone in local_branches(repo, current):
+            local_names.add(bname)
+            branch, issues = inspect_branch(repo, bname, upstream, gone, bname == current, has_main)
+            status.branches.append(branch)
+            status.issues.extend(issues)
+        status.remote_only = sorted(remote - local_names)
+    except (GitError, subprocess.TimeoutExpired) as exc:
+        status.issues.append(Issue("error", "git-failed", str(exc)))
+        return status
+
+    d = status.dirty
+    if d.staged or d.unstaged or d.untracked:
+        status.issues.append(
+            Issue(
+                "info",
+                "dirty",
+                f"working tree has {d.staged} staged, {d.unstaged} modified, "
+                f"{d.untracked} untracked",
+            )
+        )
+    if status.detached:
+        status.issues.append(Issue("info", "detached", "HEAD is detached"))
+    return status
+
+
+def load_manifest(path: Path) -> list[tuple[str, str]]:
+    with path.open(encoding="utf-8") as fh:
+        data = json.load(fh)
+    repos = data.get("repositories")
+    if not isinstance(repos, list):
+        raise ValueError("repos.json: 'repositories' must be a list")
+    out: list[tuple[str, str]] = []
+    for item in repos:
+        if not isinstance(item, dict) or "name" not in item or "path" not in item:
+            raise ValueError("repos.json: every repository needs 'name' and 'path'")
+        if "origin" not in item.get("remotes", {}):
+            print(f"fetch-all: {item['name']} has no origin remote; skipped", file=sys.stderr)
+            continue
+        out.append((str(item["name"]), str(item["path"])))
+    return out
+
+
+def build_report(root: Path, manifest: Path, do_fetch: bool) -> Report:
+    repos = load_manifest(manifest)
+    with ThreadPoolExecutor(max_workers=max(1, len(repos))) as pool:
+        statuses = list(pool.map(lambda r: inspect_repo(root, r[0], r[1], do_fetch), repos))
+    counts = {"error": 0, "warning": 0, "info": 0}
+    for status in statuses:
+        for issue in status.issues:
+            counts[issue.severity] += 1
+    return Report(
+        generated_at=datetime.now(UTC).isoformat(timespec="seconds"),
+        root=str(root),
+        fetched=do_fetch,
+        repositories=statuses,
+        summary=Summary(
+            ok=counts["error"] == 0,
+            repositories=len(statuses),
+            errors=counts["error"],
+            warnings=counts["warning"],
+            infos=counts["info"],
+        ),
+    )
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    parser.add_argument("--pretty", action="store_true", help="indent the JSON")
+    parser.add_argument(
+        "--no-fetch", action="store_true", help="skip git fetch; report local state"
+    )
+    parser.add_argument("--manifest", type=Path, help="path to repos.json (default: repo root)")
+    args = parser.parse_args()
+
+    root = Path(__file__).resolve().parent.parent
+    manifest = args.manifest or root / "repos.json"
+    try:
+        report = build_report(root, manifest, do_fetch=not args.no_fetch)
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        print(f"fetch-all: {exc}", file=sys.stderr)
+        sys.exit(2)
+
+    json.dump(asdict(report), sys.stdout, indent=2 if args.pretty else None)
+    sys.stdout.write("\n")
+    sys.exit(0 if report.summary.ok else 1)
+
+
+if __name__ == "__main__":
+    main()

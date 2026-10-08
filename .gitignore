@@ -21,4 +21,5 @@ CLAUDE.local.md
 
 # --- Nested project repositories (each has its own .git; see README.md) ---
 browser_extensions/**/sync_files/
-browser_extensions/**/sync_server/
+browser_extensions/sync_server/
+browser_extensions/repo_watch/

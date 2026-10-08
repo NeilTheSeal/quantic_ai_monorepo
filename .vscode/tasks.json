@@ -7,7 +7,9 @@
       "label": "pull-all on open",
       "type": "shell",
       "command": "${workspaceFolder}/scripts/pull-all",
-      "runOptions": { "runOn": "folderOpen" },
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
       "presentation": {
         "reveal": "silent",
         "revealProblems": "onProblem",
@@ -15,6 +17,18 @@
         "close": false
       },
       "problemMatcher": []
+    },
+    {
+      "label": "build repo_watch",
+      "type": "shell",
+      "command": "npm run build",
+      "options": {
+        "cwd": "${workspaceFolder}/browser_extensions/repo_watch"
+      },
+      "problemMatcher": "$tsc",
+      "presentation": {
+        "reveal": "silent"
+      }
     }
   ]
 }

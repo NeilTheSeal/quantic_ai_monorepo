@@ -13,6 +13,7 @@ export default defineConfig(
     ignores: [
       "**/node_modules/",
       "**/dist/",
+      "**/out/",
       "**/build/",
       "**/coverage/",
       "**/.venv/",

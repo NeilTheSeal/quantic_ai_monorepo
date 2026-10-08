@@ -23,6 +23,10 @@ quantic_ai_monorepo/
 ├── courses/                         # One folder per course
 │   └── ai_assisted_software_development/
 │       └── lesson_1/                # One folder per lesson
+├── browser_extensions/
+│   ├── tampermonkey/                # Userscripts, installed by URL; not linted or formatted
+│   ├── sync_server/                 # WebDAV sync server on Heroku (own git repo, gitignored)
+│   └── repo_watch/                  # VS Code extension: fetch-all on a timer, toasts + Problems
 ├── .claude/                         # AI assistant config (Claude Code; Copilot reads most of it)
 │   ├── agents/                      # Subagents: reviewer, researcher
 │   ├── hooks/                       # Python hook scripts (git guard, secret guard, post-edit checks)
@@ -33,7 +37,7 @@ quantic_ai_monorepo/
 │   └── copilot-instructions.md      # GitHub Copilot entry point; defers to CLAUDE.md
 ├── .githooks/pre-commit             # Ruff + mypy on staged Python files
 ├── .vscode/                         # Shared editor settings and recommended extensions
-├── scripts/                         # pull-all, type/lint/format-check-all (on PATH via the .code-workspace)
+├── scripts/                         # pull-all, fetch-all (JSON sync report), type/lint/format-check-all
 ├── CLAUDE.md                        # Shared AI assistant context (Claude Code + Copilot)
 ├── eslint.config.js                 # Shared ESLint rules for every JS/TS project
 ├── .prettierrc.json                 # Shared Prettier settings (.prettierignore excludes Python etc.)

@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run repo_watch extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/browser_extensions/repo_watch",
+        "${workspaceFolder}"
+      ],
+      "outFiles": ["${workspaceFolder}/browser_extensions/repo_watch/out/**/*.js"],
+      "preLaunchTask": "build repo_watch"
+    }
+  ]
+}

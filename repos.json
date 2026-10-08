@@ -37,6 +37,17 @@
           "push": "git@github.com:NeilTheSeal/sync_files.git"
         }
       }
+    },
+    {
+      "name": "repo_watch",
+      "path": "browser_extensions/repo_watch",
+      "branch": "main",
+      "remotes": {
+        "origin": {
+          "fetch": "git@github.com:NeilTheSeal/repo_watch.git",
+          "push": "git@github.com:NeilTheSeal/repo_watch.git"
+        }
+      }
     }
   ]
 }
