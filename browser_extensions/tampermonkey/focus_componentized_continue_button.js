@@ -1,0 +1,100 @@
+// ==UserScript==
+// @name         Focus Componentized Continue Button
+// @namespace    http://tampermonkey.net
+// @version      1.3
+// @description  Waits for continue button to appear across SPA page updates and focuses it.
+// @author       Neil Hendren
+// @updateURL    https://raw.githubusercontent.com/NeilTheSeal/quantic_ai_monorepo/refs/heads/main/browser_extensions/tampermonkey/focus_componentized_continue_button.js
+// @downloadURL  https://raw.githubusercontent.com/NeilTheSeal/quantic_ai_monorepo/refs/heads/main/browser_extensions/tampermonkey/focus_componentized_continue_button.js
+// @match        https://app.quantic.edu/*
+// @match        https://*.quantic.edu/*
+// @grant        none
+// @run-at       document-idle
+// ==/UserScript==
+
+(() => {
+  "use strict";
+
+  let lastFocusedBtn = null;
+  let lastInteractionTime = 0;
+  const COOLDOWN_MS = 3000;
+
+  // Helper to check if 3 seconds have passed since the last interaction
+  function canInteract() {
+    return Date.now() - lastInteractionTime >= COOLDOWN_MS;
+  }
+
+  // 1. Listen for the mousedown event on the document
+  document.addEventListener("mousedown", function (event) {
+    // Check if the right mouse button (button code 2) was pressed
+    if (event.button === 2) {
+      const targetElement = document.querySelector("button.flat.green");
+      if (targetElement && targetElement.checkVisibility() && canInteract()) {
+        lastInteractionTime = Date.now();
+        targetElement.click();
+      }
+    }
+  });
+
+  // 2. Prevent the default browser context menu from opening
+  document.addEventListener("contextmenu", function (event) {
+    event.preventDefault();
+  });
+
+  function isVisible(el) {
+    return (
+      !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length) &&
+      window.getComputedStyle(el).display !== "none" &&
+      window.getComputedStyle(el).visibility !== "hidden" &&
+      !el.classList.contains("ng-hide")
+    );
+  }
+
+  function checkAndFocusButton() {
+    const targetElement = document.querySelector("button.flat.green");
+
+    // Only process if the button exists, is visible, hasn't already been processed, and cooldown has elapsed
+    if (
+      targetElement &&
+      isVisible(targetElement) &&
+      targetElement !== lastFocusedBtn &&
+      canInteract()
+    ) {
+      lastFocusedBtn = targetElement; // Prevent repeating action on same element reference
+      lastInteractionTime = Date.now(); // Record interaction timestamp
+
+      const closeBtn = document.querySelector(".close-button");
+      if (closeBtn) closeBtn.click();
+
+      setTimeout(() => {
+        targetElement.focus();
+        if (
+          targetElement.classList.contains("ready") &&
+          targetElement.classList.contains("animation-removed")
+        ) {
+          setTimeout(() => {
+            targetElement.click();
+            console.log("[Tampermonkey] Clicked continue button");
+          }, 100);
+        }
+
+        console.log("[Tampermonkey] Focused continue button");
+      }, 1000);
+    }
+  }
+
+  // Observe document body for dynamic DOM changes (SPA navigation)
+  const observer = new MutationObserver(() => {
+    checkAndFocusButton();
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["style", "class"],
+  });
+
+  // Initial check
+  checkAndFocusButton();
+})();
