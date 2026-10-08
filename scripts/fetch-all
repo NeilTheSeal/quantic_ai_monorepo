@@ -16,8 +16,14 @@ Report shape (see `Report` and `RepoStatus` below). Each repo carries an `issues
 `severity` error|warning|info and a `kind` the watcher can switch on:
 
     error    not-cloned, fetch-failed, git-failed
-    warning  diverged, behind, upstream-gone, needs-main-merge
-    info     ahead, no-upstream, dirty, detached
+    warning  diverged, behind, upstream-gone, needs-main-merge, auto-pull-skipped,
+             auto-pull-failed
+    info     ahead, no-upstream, dirty, detached, auto-pulled
+
+A repo with `"auto-pull": true` in repos.json has its manifest branch fast-forwarded right after
+the fetch, when that is safe: the branch is strictly behind its upstream (never diverged or
+ahead) and, if it is the checked-out branch, nothing is staged or modified (untracked files are
+fine). Anything else is reported as `auto-pull-skipped` and left alone. `--no-fetch` never pulls.
 
 Only the standard library is used, so this runs with any Python 3.11+ without a venv.
 """
@@ -72,6 +78,18 @@ class Dirty:
     untracked: int
 
 
+AutoPullState = Literal["disabled", "not-fetched", "up-to-date", "pulled", "skipped", "failed"]
+
+
+@dataclass(slots=True, frozen=True)
+class AutoPull:
+    state: AutoPullState
+    branch: str
+    detail: str
+    # Commits fast-forwarded (only for "pulled").
+    commits: int = 0
+
+
 @dataclass(slots=True, frozen=True)
 class FetchResult:
     ok: bool
@@ -90,6 +108,7 @@ class RepoStatus:
     dirty: Dirty | None = None
     branches: list[Branch] = field(default_factory=list)
     remote_only: list[str] = field(default_factory=list)
+    auto_pull: AutoPull | None = None
     issues: list[Issue] = field(default_factory=list)
 
 
@@ -272,7 +291,50 @@ def elapsed_ms(started: float) -> int:
     return round((time.monotonic() - started) * 1000)
 
 
-def inspect_repo(root: Path, name: str, rel: str, do_fetch: bool) -> RepoStatus:
+def configured_upstream(repo: Path, branch: str) -> str | None:
+    out = git(repo, "for-each-ref", f"refs/heads/{branch}", "--format=%(upstream:short)")
+    upstream = out.strip() or None
+    if upstream is None and ref_exists(repo, f"{REMOTE}/{branch}"):
+        upstream = f"{REMOTE}/{branch}"
+    return upstream
+
+
+def auto_pull(repo: Path, branch: str, current: str | None, dirty: Dirty) -> AutoPull:
+    """Fast-forward `branch` to its upstream if that is the only thing that would happen."""
+    if not ref_exists(repo, f"refs/heads/{branch}"):
+        return AutoPull("skipped", branch, f"no local branch {branch}")
+    upstream = configured_upstream(repo, branch)
+    if upstream is None:
+        return AutoPull("skipped", branch, f"{branch} has no upstream on {REMOTE}")
+    ahead, behind = ahead_behind(repo, branch, upstream)
+    if ahead and behind:
+        return AutoPull("skipped", branch, f"{branch} has diverged from {upstream}")
+    if ahead:
+        return AutoPull("skipped", branch, f"{branch} is ahead of {upstream}; nothing to pull")
+    if not behind:
+        return AutoPull("up-to-date", branch, f"{branch} already matches {upstream}")
+    try:
+        if current == branch:
+            if dirty.staged or dirty.unstaged:
+                return AutoPull(
+                    "skipped",
+                    branch,
+                    f"{branch} is checked out with {dirty.staged} staged and {dirty.unstaged} "
+                    "modified files",
+                )
+            git(repo, "merge", "--ff-only", upstream)
+        else:
+            # Not checked out: move the ref without touching the working tree. `behind` with
+            # `ahead == 0` already proves this is a fast-forward.
+            git(repo, "branch", "-f", branch, upstream)
+    except (GitError, subprocess.TimeoutExpired) as exc:
+        return AutoPull("failed", branch, str(exc))
+    return AutoPull("pulled", branch, f"fast-forwarded {branch} to {upstream}", commits=behind)
+
+
+def inspect_repo(
+    root: Path, name: str, rel: str, target_branch: str, want_auto_pull: bool, do_fetch: bool
+) -> RepoStatus:
     repo = root if rel == "." else root / rel
     status = RepoStatus(name=name, path=rel, cloned=(repo / ".git").exists())
     if not status.cloned:
@@ -291,6 +353,14 @@ def inspect_repo(root: Path, name: str, rel: str, do_fetch: bool) -> RepoStatus:
         status.current_branch = current
         status.detached = current is None
         status.dirty = worktree_dirty(repo)
+        if not want_auto_pull:
+            status.auto_pull = AutoPull("disabled", target_branch, "auto-pull is off in repos.json")
+        elif not do_fetch or (status.fetch is not None and not status.fetch.ok):
+            status.auto_pull = AutoPull("not-fetched", target_branch, "nothing fetched this run")
+        else:
+            status.auto_pull = auto_pull(repo, target_branch, current, status.dirty)
+            if status.auto_pull.state == "pulled":
+                status.dirty = worktree_dirty(repo)
         has_main = ref_exists(repo, f"{REMOTE}/{MAIN}")
         remote = remote_branches(repo)
         local_names: set[str] = set()
@@ -316,30 +386,69 @@ def inspect_repo(root: Path, name: str, rel: str, do_fetch: bool) -> RepoStatus:
         )
     if status.detached:
         status.issues.append(Issue("info", "detached", "HEAD is detached"))
+    ap = status.auto_pull
+    if ap is not None:
+        if ap.state == "pulled":
+            status.issues.append(
+                Issue(
+                    "info",
+                    "auto-pulled",
+                    f"auto-pull: {ap.detail} ({ap.commits} commits)",
+                    ap.branch,
+                )
+            )
+        elif ap.state == "skipped":
+            status.issues.append(
+                Issue("warning", "auto-pull-skipped", f"auto-pull skipped: {ap.detail}", ap.branch)
+            )
+        elif ap.state == "failed":
+            status.issues.append(
+                Issue("warning", "auto-pull-failed", f"auto-pull failed: {ap.detail}", ap.branch)
+            )
     return status
 
 
-def load_manifest(path: Path) -> list[tuple[str, str]]:
+@dataclass(slots=True, frozen=True)
+class ManifestRepo:
+    name: str
+    path: str
+    branch: str
+    auto_pull: bool
+
+
+def load_manifest(path: Path) -> list[ManifestRepo]:
     with path.open(encoding="utf-8") as fh:
         data = json.load(fh)
     repos = data.get("repositories")
     if not isinstance(repos, list):
         raise ValueError("repos.json: 'repositories' must be a list")
-    out: list[tuple[str, str]] = []
+    out: list[ManifestRepo] = []
     for item in repos:
         if not isinstance(item, dict) or "name" not in item or "path" not in item:
             raise ValueError("repos.json: every repository needs 'name' and 'path'")
         if "origin" not in item.get("remotes", {}):
             print(f"fetch-all: {item['name']} has no origin remote; skipped", file=sys.stderr)
             continue
-        out.append((str(item["name"]), str(item["path"])))
+        out.append(
+            ManifestRepo(
+                name=str(item["name"]),
+                path=str(item["path"]),
+                branch=str(item.get("branch", MAIN)),
+                auto_pull=bool(item.get("auto-pull", False)),
+            )
+        )
     return out
 
 
 def build_report(root: Path, manifest: Path, do_fetch: bool) -> Report:
     repos = load_manifest(manifest)
     with ThreadPoolExecutor(max_workers=max(1, len(repos))) as pool:
-        statuses = list(pool.map(lambda r: inspect_repo(root, r[0], r[1], do_fetch), repos))
+        statuses = list(
+            pool.map(
+                lambda r: inspect_repo(root, r.name, r.path, r.branch, r.auto_pull, do_fetch),
+                repos,
+            )
+        )
     counts = {"error": 0, "warning": 0, "info": 0}
     for status in statuses:
         for issue in status.issues:

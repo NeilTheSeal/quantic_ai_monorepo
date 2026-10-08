@@ -10,7 +10,8 @@
           "fetch": "git@github.com:NeilTheSeal/quantic_ai_monorepo.git",
           "push": "git@github.com:NeilTheSeal/quantic_ai_monorepo.git"
         }
-      }
+      },
+      "auto-pull": false
     },
     {
       "name": "sync_server",
@@ -25,7 +26,8 @@
           "fetch": "https://git.heroku.com/sync-server-neilh.git",
           "push": "https://git.heroku.com/sync-server-neilh.git"
         }
-      }
+      },
+      "auto-pull": false
     },
     {
       "name": "sync_files",
@@ -36,7 +38,8 @@
           "fetch": "git@github.com:NeilTheSeal/sync_files.git",
           "push": "git@github.com:NeilTheSeal/sync_files.git"
         }
-      }
+      },
+      "auto-pull": true
     },
     {
       "name": "repo_watch",
@@ -47,7 +50,8 @@
           "fetch": "git@github.com:NeilTheSeal/repo_watch.git",
           "push": "git@github.com:NeilTheSeal/repo_watch.git"
         }
-      }
+      },
+      "auto-pull": false
     }
   ]
 }

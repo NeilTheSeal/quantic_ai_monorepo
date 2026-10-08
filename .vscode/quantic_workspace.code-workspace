@@ -20,5 +20,11 @@
     "terminal.integrated.env.osx": {
       "PATH": "${workspaceFolder}/scripts:${env:PATH}",
     },
+    "repoWatch.toastSeverities": ["info", "error", "warning"],
+    "repoWatch.enabled": true,
+    "repoWatch.intervalMinutes": 10,
+    "repoWatch.runOnStartup": true,
+    "repoWatch.fetchAll.script": "${workspaceFolder}/scripts/fetch-all",
+    "repoWatch.fetchAll.python": "python3",
   },
 }
