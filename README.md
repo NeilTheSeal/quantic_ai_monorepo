@@ -179,7 +179,9 @@ A nested repo must build on its own (Heroku clones only that repo), so it cannot
 listed in [scripts/lib/shared-files.sh](scripts/lib/shared-files.sh): `tsconfig.base.json`,
 `.prettierrc.json`, `.gitattributes`, `.githooks/post-merge`, and the nested `pre-commit` hook
 itself. The hook refreshes and stages the copies on every commit made inside the monorepo, and
-does nothing in a standalone clone. After changing a root original, run
+does nothing in a standalone clone. It also rewrites any `tsconfig*.json` whose `extends` reaches
+`tsconfig.base.json` outside the repo so it points at the repo's own copy. After changing a root
+original, run
 [scripts/sync-shared-files](scripts/sync-shared-files) (or `--check` to list stale copies) and
 commit each nested repo. Never edit a copy.
 
