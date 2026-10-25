@@ -2,6 +2,8 @@
 
 ## Conversation
 
+**Full conversation available [at this link](https://chatgpt.com/share/6ade3893-87ec-83e8-87d3-2262c4c1e003)**
+
 ### 1. Neil
 
 Hi Lily, I'm Neil, a website developer, and I am going to help you with your new, state-of-the-art
