@@ -29,10 +29,10 @@ Source: [School project rubric](rubric.pdf).
 
 ## 2. Write the user stories
 
-- [ ] **Summarize the interview.** Record confirmed needs, user types, and any remaining assumptions
+- [x] **Summarize the interview.** Record confirmed needs, user types, and any remaining assumptions
       separately.
-- [ ] **Write 15 distinct user stories.** Use: "As a [role], I want [need], so that [outcome]."
-- [ ] **Check story coverage.** Include multiple user types and AI-enabled customer support; ensure
+- [x] **Write 15 distinct user stories.** Use: "As a [role], I want [need], so that [outcome]."
+- [x] **Check story coverage.** Include multiple user types and AI-enabled customer support; ensure
       ordering and inventory needs from the interview are represented.
 - [ ] **Number and verify the stories.** Label them `US-01` through `US-15` and record the
       supporting interview answer for each. Ask Lily follow-up questions if needed.
