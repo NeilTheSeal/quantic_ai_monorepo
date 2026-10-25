@@ -1,5 +1,7 @@
 # Interview questions for Lily
 
+**Full conversation available [at this link](https://chatgpt.com/share/6ade3893-87ec-83e8-87d3-2262c4c1e003)**
+
 - What are your short-term and long-term goals for the website?
 - How will you judge whether the site is successful, and what measurable improvements would you
   like to see compared with today?
