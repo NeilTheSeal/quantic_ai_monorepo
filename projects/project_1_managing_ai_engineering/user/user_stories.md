@@ -10,44 +10,44 @@
 
 ### FT-01: As a Lily's Florist Customer, I want to be able to browse the shop's inventory with integrated search functionality
 
-- **US-01:** Given I am a Lily's Florist Customer, when I visit the website, then there is a tab at the top of the site (e.g. "Shop") where I can click to navigate to the shop's inventory
+- **US-01:** As a Lily's Florist Customer, I want navigation at the top of the website, so that I can navigate to the shop's inventory.
 
-- **US-02:** Given I am a Lily's Florist Customer, when I hover over the "Shop" tab at the top of the site, then I see a drop-down menu with categories of the available inventory including individual flowers, arrangements (identical), arrangements (mixed), clearance, seasonal, flower health supplements, containers and vases, and accessory items
+- **US-02:** As a Lily's Florist Customer, I want to browse inventory categories, so that I can find the types of items I am looking for.
 
-- **US-03:** Given I am a Lily's Florist Customer, when I click on any one of the inventory category items in the dropdown sub-menu, then I can see the full list of items in that category including flowers that are out-of-stock or on sale
+- **US-03:** As a Lily's Florist Customer, I want to see the full list of items in an inventory category, so that I can explore the shop's selection and availability.
 
-- **US-04:** Given I am a Lily's Florist Customer, when I am browsing in an inventory category, then I can sort and filter by price, season, color(s), holiday, and "in-stock"
+- **US-04:** As a Lily's Florist Customer, I want to sort and filter inventory, so that I can find items that match my preferences.
 
 ### FT-02: As a Lily's Florist Customer, I want to be able to purchase items from the online shop using a friendly user interface and secure payment
 
-- **US-05:** Given I am a Lily's Florist Customer, when I want to add an item to my shopping cart, then there is a plus (+) icon I can click next to each item to save it to my shopping cart
+- **US-05:** As a Lily's Florist Customer, I want to add items to my shopping cart, so that I can save my selection for purchase.
 
-- **US-06:** Given I am a Lily's Florist Customer, when I have added an item to my shopping cart, then there is a sidebar containing the items I have added to my cart
+- **US-06:** As a Lily's Florist Customer, I want to see the items in my shopping cart, so that I can keep track of my selection.
 
-- **US-07:** Given I am a Lily's Florist Customer, when I want to check out, then I can click a "check out" button on the shopping cart side bar to be brought to the checkout page
+- **US-07:** As a Lily's Florist Customer, I want to proceed to checkout from my shopping cart, so that I can purchase my selected items.
 
-- **US-08:** Given I am a Lily's Florist Customer, when I am brought to the checkout page, then I can modify my order by changing quantities of items or removing items from my shopping cart
+- **US-08:** As a Lily's Florist Customer, I want to modify my order at checkout, so that I can adjust my selection before purchasing.
 
-- **US-09:** Given I am a Lily's Florist Customer, when I click "confirm" on the checkout page, then I am prompted for payment using a variety of available methods such as cash (for pickup), credit card, cryptocurrency, Stripe, Klarna, PayPal, and Venmo.
+- **US-09:** As a Lily's Florist Customer, I want to pay using a variety of available methods, so that I can complete my purchase using a method that works for me.
 
-- **US-10:** Given I am a Lily's Florist Customer, when I have finished my payment, then I am provided an invoice and receipt with an order number and am sent the same information via email
+- **US-10:** As a Lily's Florist Customer, I want an invoice and receipt with an order number, so that I have a record of my purchase.
 
 ### FT-03: As a Lily's Florist Customer, I want to have AI assistance when using the website
 
-- **US-11:** Given I am a Lily's Florist Customer, when I am using the website, then there is an icon in the bottom-right corner of the web interface where I can click to chat with an AI agent
+- **US-11:** As a Lily's Florist Customer, I want to chat with an AI agent while using the website, so that I can get assistance when needed.
 
-- **US-12:** Given I am a Lily's Florist AI Agent, when I am chatting with a customer, then I am able to provide context about every publicly available bit of information on the website, as well as background information such as store history, hours, location, and contact info
+- **US-12:** As a Lily's Florist AI Agent, I want access to publicly available website and store information, so that I can answer customers' questions about the shop.
 
-- **US-13:** Given I am a Lily's Florist AI Agent, when I am chatting with a customer, then I have enough information about their shopping experience (session browsing history on our site, shopping cart contents) to provide helpful information to them specifically
+- **US-13:** As a Lily's Florist AI Agent, I want context about a customer's shopping experience, so that I can provide helpful information specific to their visit.
 
-- **US-14:** Given I am a Lily's Florist AI Agent, when I am chatting with a customer, then I do not have access to any personal identifying information about the customer such as credit card numbers, name and phone, email, and likewise none of this information is tracked without consent
+- **US-14:** As a Lily's Florist Customer, I want control over the use of my personal identifying information, so that I can receive AI assistance while protecting my privacy.
 
 ### FT-04: As a Lily's Florist Associate, I want to have assistive technology for my job
 
-- **US-15:** Given I am a Lily's Florist Associate, when I log onto the web portal, then I am able to see the full shop inventory, including quantities of each item, cost of goods, MSRP, and current display price
+- **US-15:** As a Lily's Florist Associate, I want to view the full shop inventory, so that I can check stock quantities and pricing information for my job.
 
-- **US-16:** Given I am a Lily's Florist Associate, when I log onto the web portal, then I can see all of the pending orders, including invoice numbers, sale price, items and their quantities
+- **US-16:** As a Lily's Florist Associate, I want to view pending orders, so that I can see what customers have ordered and support order preparation.
 
-- **US-17:** Given I am a Lily's Florist Administrator, when I log onto the web portal, then I can add and delete users to and from the portal, including other associates
+- **US-17:** As a Lily's Florist Administrator, I want to manage web portal users, so that I can maintain access for associates and other users.
 
-- **US-18:** Given I am a Lily's Florist Administrator, when I log onto the web portal, then I can modify transactions, including giving refunds and modifying sale prices
+- **US-18:** As a Lily's Florist Administrator, I want to modify transactions, so that I can manage refunds and sale price adjustments.
