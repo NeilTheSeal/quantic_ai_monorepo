@@ -1,5 +1,10 @@
 # Lily's Florist: Managing AI Engineering Project
 
+Neil Hendren
+October 25, 2026
+
+**Note from the author**: The text in this document is a mixture of my own hand-written and AI-generated text from both ChatGPT Codex and Figma Make. See the chat context from ## References for more information.
+
 ## Introduction
 
 This project outlines a proposed website for Lily's Florist to simplify online flower
