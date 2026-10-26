@@ -1,35 +1,36 @@
 # Lily's Florist: Managing AI Engineering Project
 
-Neil Hendren
+**Neil Hendren**  
 October 25, 2026
 
-**Note from the author**: The text in this document is a mixture of my own hand-written and AI-generated text from both ChatGPT Codex and Figma Make. See the chat context from ## References for more information.
+**Note from the author:** This document combines my own writing with AI-generated text from ChatGPT
+Codex and Figma Make. See [Appendix C](#appendix-c-wireframe-design-conversation) and the
+[References](#references) for supporting material.
 
 ## Introduction
 
-This project outlines a proposed website for Lily's Florist to simplify online flower
-ordering, support inventory and order management, and provide AI customer assistance.
-The following sections bring together the interview synopsis, system requirements, user
-stories, and a user journey. The full interview, project checklist, and wireframe design
-conversation appear as appendices.
+This project outlines a proposed website for Lily's Florist to simplify online flower ordering,
+support inventory and order management, and provide AI customer assistance. The following sections
+bring together the interview synopsis, system requirements, user stories, and a user journey. The
+full interview, project checklist, and wireframe design conversation appear as appendices.
 
 ## Synopsis
 
 ### Key Topics and Responses
 
-- **Pain points:** Manual order entry and stock tracking cause missed details, duplicate orders,
-  and overselling; repetitive inquiries interrupt staff during busy periods.
+- **Pain points:** Manual order entry and stock tracking cause missed details, duplicate orders, and
+  overselling; repetitive inquiries interrupt staff during busy periods.
 - **Business goals:** Simplify online ordering, reduce administrative work, and grow the business
   while preserving personal customer service.
-- **Sales and service targets:** Increase online sales by 15–20% in year one and 30–40% within
-  three years, achieve 90% customer satisfaction, and automate 70% of routine inquiries.
-- **Efficiency targets:** Cut order-processing time by at least 50% and flower waste by 25%,
-  while growing normal daily orders from 20–30 to 40–50.
+- **Sales and service targets:** Increase online sales by 15–20% in year one and 30–40% within three
+  years, achieve 90% customer satisfaction, and automate 70% of routine inquiries.
+- **Efficiency targets:** Cut order-processing time by at least 50% and flower waste by 25%, while
+  growing normal daily orders from 20–30 to 40–50.
 
-### Categories of User's Requirements
+### Categories of User Requirements
 
-- **User groups:** Customers and visitors need shopping and support tools; florists, delivery
-  staff, and Lily need role-appropriate operational access, while event customers need quotes.
+- **User groups:** Customers and visitors need shopping and support tools; florists, delivery staff,
+  and Lily need role-appropriate operational access, while event customers need quotes.
 - **Functional requirements:** Support browsing, ordering, payments, scheduling, inventory,
   notifications, staff workflows, and AI assistance.
 - **Nonfunctional requirements:** Provide secure, reliable, mobile-friendly service with screen
@@ -41,8 +42,8 @@ conversation appear as appendices.
 
 - **Shopping and payment:** Offer guest checkout, arrangement options, extras, and basic discount
   codes, with cards and digital wallets online or cash/card for pickup.
-- **Fulfillment:** Offer delivery within 15 miles, capacity-controlled slots, and bookings up to
-  30 days ahead, with automatic email updates, optional SMS, and secure guest tracking links.
+- **Fulfillment:** Offer delivery within 15 miles, capacity-controlled slots, and bookings up to 30
+  days ahead, with automatic email updates, optional SMS, and secure guest tracking links.
 - **Inventory and exceptions:** Reserve stock for 15 minutes during checkout, track stock through
   preparation, and support payment retries, approved substitutions, cancellations, and refunds.
 - **AI support:** Answer routine questions around the clock using maintained shop information and
@@ -54,12 +55,12 @@ conversation appear as appendices.
 
 - **Schedule:** Lily prefers a January 15, 2027 launch, allowing testing and staff training before
   Valentine's Day.
-- **Budget:** Initial spending is $12,000–$18,000, with approximately $300–$500 monthly for
-  hosting, maintenance, and AI services.
-- **Capacity and continuity:** Support 150–200 daily orders during peaks with simple workflows
-  for a small team and minimal disruption to ongoing business.
-- **Existing systems:** Retain Square and Gmail, connect online payments to Square if possible,
-  and preserve existing customer records and product information during migration.
+- **Budget:** Initial spending is $12,000–$18,000, with approximately $300–$500 monthly for hosting,
+  maintenance, and AI services.
+- **Capacity and continuity:** Support 150–200 daily orders during peaks with simple workflows for a
+  small team and minimal disruption to ongoing business.
+- **Existing systems:** Retain Square and Gmail, connect online payments to Square if possible, and
+  preserve existing customer records and product information during migration.
 
 ### Other Relevant Information
 
@@ -68,16 +69,23 @@ conversation appear as appendices.
 - **Content ownership:** Lily maintains prices, policies, promotions, and FAQs, while florists
   maintain product details and availability; listings are reviewed weekly and seasonally refreshed.
 - **Clarifications needed:** Confirm how unpaid pickup orders enter the staff workflow and reserve
-  stock, and whether AI recommendations belong at launch or in Version 2.
+  stock, whether AI recommendations belong at launch or in Version 2, and whether the stated flower
+  budget includes delivery and tax.
 
 Source: [Full interview transcript](#appendix-a-interview-with-lily).
 
 ## Requirements
 
-These draft requirements preserve the details extracted from the original
-[user stories](#user-stories). Each requirement identifies its source story.
-Functional requirements describe behavior; nonfunctional requirements describe interface,
-security, or privacy constraints. Unspecified implementation details remain open.
+These draft requirements preserve the details extracted from the original [user
+stories](#user-stories). Each requirement identifies its source story. Functional requirements
+describe behavior; nonfunctional requirements describe interface, security, or privacy constraints.
+This is a selected set of requirements for the project, not a complete launch specification; the
+synopsis records Lily's broader goals. Detailed catalog categories, sorting options, and staff
+pricing fields are proposed design choices requiring client confirmation.
+
+The AI flow below uses public catalog information and shopping-session context only. Lily's broader
+request for verified order support and contact collection requires a separate privacy design; NFR-04
+applies to the selected flow.
 
 ### Functional Requirements
 
@@ -86,31 +94,31 @@ security, or privacy constraints. Unspecified implementation details remain open
 | ID    | Requirement                                                                                                                                                                                    | Source |
 | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
 | FR-01 | The website shall provide a Shop navigation control that opens the shop's inventory when selected.                                                                                             | US-01  |
-| FR-02 | Hovering over the Shop navigation control shall display a drop-down menu of inventory categories.                                                                                              | US-02  |
+| FR-02 | Selecting the category control shall display an inventory category menu using touch, mouse, or keyboard input.                                                                                 | US-02  |
 | FR-03 | The category menu shall include individual flowers, arrangements (identical), arrangements (mixed), clearance, seasonal, flower health supplements, containers and vases, and accessory items. | US-02  |
-| FR-04 | Selecting a category in the drop-down menu shall display the full list of items belonging to that category.                                                                                    | US-03  |
-| FR-05 | Category listings shall include out-of-stock items.                                                                                                                                            | US-03  |
+| FR-04 | Selecting a category shall display its items and allow keyword searches within that category.                                                                                                  | US-03  |
+| FR-05 | Category listings shall mark out-of-stock items as unavailable and prevent adding them to the cart.                                                                                            | US-03  |
 | FR-06 | Category listings shall include items on sale.                                                                                                                                                 | US-03  |
 | FR-07 | Customers shall be able to sort category listings by price, season, color(s), holiday, and in-stock status.                                                                                    | US-04  |
 | FR-08 | Customers shall be able to filter category listings by price, season, color(s), holiday, and in-stock status.                                                                                  | US-04  |
 
 #### FT-02: Shopping Cart and Purchasing
 
-| ID    | Requirement                                                                                                              | Source |
-| ----- | ------------------------------------------------------------------------------------------------------------------------ | ------ |
-| FR-09 | Selecting an item's plus (+) control shall add that item to the customer's shopping cart.                                | US-05  |
-| FR-10 | After an item is added, the website shall display a sidebar containing the items in the customer's shopping cart.        | US-06  |
-| FR-11 | The cart sidebar shall provide a Check Out button.                                                                       | US-07  |
-| FR-12 | Selecting Check Out shall open the checkout page with the customer's cart contents.                                      | US-07  |
-| FR-13 | Customers shall be able to change item quantities on the checkout page.                                                  | US-08  |
-| FR-14 | Customers shall be able to remove items from their cart on the checkout page.                                            | US-08  |
-| FR-15 | Selecting Confirm on the checkout page shall prompt the customer to select an available payment method.                  | US-09  |
-| FR-16 | Pickup orders shall offer cash as a payment option.                                                                      | US-09  |
-| FR-17 | Online payment options shall include credit card payments.                                                               | US-09  |
-| FR-18 | Online payment options shall include cryptocurrency, Stripe, Klarna, PayPal, and Venmo.                                  | US-09  |
-| FR-19 | After payment is completed, the website shall provide an invoice and receipt.                                            | US-10  |
-| FR-20 | The invoice and receipt shall include the order number.                                                                  | US-10  |
-| FR-21 | After payment is completed, the system shall email the invoice and receipt, including the order number, to the customer. | US-10  |
+| ID    | Requirement                                                                                                                    | Source |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| FR-09 | Selecting an item's plus (+) control shall add that item to the customer's shopping cart.                                      | US-05  |
+| FR-10 | After an item is added, the website shall display a cart drawer containing the selected items, using a bottom sheet on mobile. | US-06  |
+| FR-11 | The cart drawer shall provide a Check Out button.                                                                              | US-07  |
+| FR-12 | Selecting Check Out shall open the checkout page with the customer's cart contents.                                            | US-07  |
+| FR-13 | Customers shall be able to change item quantities on the checkout page.                                                        | US-08  |
+| FR-14 | Customers shall be able to remove items from their cart on the checkout page.                                                  | US-08  |
+| FR-15 | Selecting Confirm on the checkout page shall prompt the customer to select an available payment method.                        | US-09  |
+| FR-16 | Pickup orders shall offer cash as a payment option.                                                                            | US-09  |
+| FR-17 | Online payment options shall include credit and debit card payments.                                                           | US-09  |
+| FR-18 | Online payment options shall include Apple Pay and Google Pay, subject to payment-provider support.                            | US-09  |
+| FR-19 | After payment is completed, the website shall provide an invoice and receipt.                                                  | US-10  |
+| FR-20 | The invoice and receipt shall include the order number.                                                                        | US-10  |
+| FR-21 | After payment is completed, the system shall email the invoice and receipt, including the order number, to the customer.       | US-10  |
 
 #### FT-03: AI Assistance
 
@@ -118,7 +126,7 @@ security, or privacy constraints. Unspecified implementation details remain open
 | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
 | FR-22 | Selecting the AI chat icon shall open a conversation with an AI agent.                                                                          | US-11  |
 | FR-23 | The AI agent shall have access to publicly available website information for answering customer questions.                                      | US-12  |
-| FR-24 | The AI agent's shop information shall include store history, hours, location, and contact information.                                          | US-12  |
+| FR-24 | The AI agent's shop information shall include store history, hours, location, contact information, and current public product availability.     | US-12  |
 | FR-25 | Subject to the privacy constraints below, the AI agent shall have access to the customer's browsing history within the current website session. | US-13  |
 | FR-26 | Subject to the privacy constraints below, the AI agent shall have access to the customer's current shopping cart contents.                      | US-13  |
 | FR-27 | The AI agent shall use available session and cart context to answer questions about the customer's current shopping selections.                 | US-13  |
@@ -155,78 +163,119 @@ security, or privacy constraints. Unspecified implementation details remain open
 
 ### Project Epic
 
-#### We want to create a simple online flower-ordering experience for Lily's Florist Shop, where customers can easily browse inventory, save their selection, pay for their order, track previous orders, and receive AI assistance when needed in a responsive web interface. Lily's Florist Shop employees should be able to track orders and inventory, schedule deliveries, and access workflows and shop tools to support their roles
+We want to create a simple online flower-ordering experience for Lily's Florist, where customers can
+browse inventory, save their selection, pay for their order, track current orders, and receive AI
+assistance through a responsive interface. Employees should be able to track orders and inventory,
+schedule deliveries, and access tools appropriate to their roles; customer account histories are
+planned for Version 2.
 
 ### Project Features and User Stories
 
-**Note from the author**: this is a variation (and simplification) on how we write features and user stories at my job and how I learned to write them in school. Any discrepancies between how these are written and Quantic's convention are a matter of taste and company culture.
+**Note from the author:** The feature and story format is adapted from practices I use at work and
+learned in school. Each story identifies a role, need, and intended outcome.
 
-#### FT-01: As a Lily's Florist Customer, I want to be able to browse the shop's inventory with integrated search functionality
+#### FT-01: Browse and Search Inventory
 
-- **US-01:** As a Lily's Florist Customer, I want navigation at the top of the website, so that I can navigate to the shop's inventory.
+Customers need to browse the catalog and find items using categories, search, sorting, and filters.
 
-- **US-02:** As a Lily's Florist Customer, I want to browse inventory categories, so that I can find the types of items I am looking for.
+- **US-01:** As a Lily's Florist Customer, I want navigation at the top of the website, so that I
+  can navigate to the shop's inventory.
 
-- **US-03:** As a Lily's Florist Customer, I want to see the full list of items in an inventory category, so that I can explore the shop's selection and availability.
+- **US-02:** As a Lily's Florist Customer, I want to browse inventory categories, so that I can find
+  the types of items I am looking for.
 
-- **US-04:** As a Lily's Florist Customer, I want to sort and filter inventory, so that I can find items that match my preferences.
+- **US-03:** As a Lily's Florist Customer, I want to browse and search items in an inventory
+  category, so that I can explore the shop's selection and availability.
 
-#### FT-02: As a Lily's Florist Customer, I want to be able to purchase items from the online shop using a friendly user interface and secure payment
+- **US-04:** As a Lily's Florist Customer, I want to sort and filter inventory, so that I can find
+  items that match my preferences.
 
-- **US-05:** As a Lily's Florist Customer, I want to add items to my shopping cart, so that I can save my selection for purchase.
+#### FT-02: Purchase Items
 
-- **US-06:** As a Lily's Florist Customer, I want to see the items in my shopping cart, so that I can keep track of my selection.
+Customers need a clear checkout flow with secure payment and a record of their purchase.
 
-- **US-07:** As a Lily's Florist Customer, I want to proceed to checkout from my shopping cart, so that I can purchase my selected items.
+- **US-05:** As a Lily's Florist Customer, I want to add items to my shopping cart, so that I can
+  save my selection for purchase.
 
-- **US-08:** As a Lily's Florist Customer, I want to modify my order at checkout, so that I can adjust my selection before purchasing.
+- **US-06:** As a Lily's Florist Customer, I want to see the items in my shopping cart, so that I
+  can keep track of my selection.
 
-- **US-09:** As a Lily's Florist Customer, I want to pay using a variety of available methods, so that I can complete my purchase using a method that works for me.
+- **US-07:** As a Lily's Florist Customer, I want to proceed to checkout from my shopping cart, so
+  that I can purchase my selected items.
 
-- **US-10:** As a Lily's Florist Customer, I want an invoice and receipt with an order number, so that I have a record of my purchase.
+- **US-08:** As a Lily's Florist Customer, I want to modify my order at checkout, so that I can
+  adjust my selection before purchasing.
 
-#### FT-03: As a Lily's Florist Customer, I want to have AI assistance when using the website
+- **US-09:** As a Lily's Florist Customer, I want to pay using a variety of available methods, so
+  that I can complete my purchase using a method that works for me.
 
-- **US-11:** As a Lily's Florist Customer, I want to chat with an AI agent while using the website, so that I can get assistance when needed.
+- **US-10:** As a Lily's Florist Customer, I want an invoice and receipt with an order number, so
+  that I have a record of my purchase.
 
-- **US-12:** As a Lily's Florist AI Agent, I want access to publicly available website and store information, so that I can answer customers' questions about the shop.
+#### FT-03: Get AI Assistance
 
-- **US-13:** As a Lily's Florist AI Agent, I want context about a customer's shopping experience, so that I can provide helpful information specific to their visit.
+Customers need contextual shopping assistance while retaining control over their personal data.
 
-- **US-14:** As a Lily's Florist Customer, I want control over the use of my personal identifying information, so that I can receive AI assistance while protecting my privacy.
+- **US-11:** As a Lily's Florist Customer, I want to chat with an AI agent while using the website,
+  so that I can get assistance when needed.
 
-#### FT-04: As a Lily's Florist Associate, I want to have assistive technology for my job
+- **US-12:** As a Lily's Florist AI Agent, I want access to publicly available website and store
+  information, so that I can answer customers' questions about the shop.
 
-- **US-15:** As a Lily's Florist Associate, I want to view the full shop inventory, so that I can check stock quantities and pricing information for my job.
+- **US-13:** As a Lily's Florist AI Agent, I want context about a customer's shopping experience, so
+  that I can provide helpful information specific to their visit.
 
-- **US-16:** As a Lily's Florist Associate, I want to view pending orders, so that I can see what customers have ordered and support order preparation.
+- **US-14:** As a Lily's Florist Customer, I want control over the use of my personal identifying
+  information, so that I can receive AI assistance while protecting my privacy.
 
-- **US-17:** As a Lily's Florist Administrator, I want to manage web portal users, so that I can maintain access for associates and other users.
+#### FT-04: Use Staff Tools
 
-- **US-18:** As a Lily's Florist Administrator, I want to modify transactions, so that I can manage refunds and sale price adjustments.
+Associates and administrators need tools for inventory, orders, access, and transaction management.
+
+- **US-15:** As a Lily's Florist Associate, I want to view the full shop inventory, so that I can
+  check stock quantities and pricing information for my job.
+
+- **US-16:** As a Lily's Florist Associate, I want to view pending orders, so that I can see what
+  customers have ordered and support order preparation.
+
+- **US-17:** As a Lily's Florist Administrator, I want to manage web portal users, so that I can
+  maintain access for associates and other users.
+
+- **US-18:** As a Lily's Florist Administrator, I want to modify transactions, so that I can manage
+  refunds and sale price adjustments.
 
 ## User Journey: Finding Flowers with AI Assistance
 
 Alex is a first-time visitor looking for pink roses as a birthday gift. The goal is to find
-available flowers and proceed to checkout. This exemplifies a single feature (FT-01) in the feature suite.
+available flowers and proceed to checkout. The journey spans inventory browsing (FT-01), AI
+assistance (FT-03), and the cart-to-checkout handoff (FT-02). The wireframes use a mobile-first
+layout and the display name "Lily's Flower Shop" for the same hypothetical business.
 
 | Step         | User action                                                                             | System response                                                                     | Related stories     |
 | ------------ | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------- |
 | 1. Visit     | Alex opens the website and selects Shop.                                                | Displays the flower catalog.                                                        | US-01               |
 | 2. Search    | Alex searches for roses.                                                                | Displays matching flowers with prices and availability.                             | US-03               |
 | 3. Ask AI    | Unsure which colors are available, Alex opens chat and asks, "Are pink roses in stock?" | Checks current inventory, confirms availability, and links to the matching flowers. | US-11, US-12        |
-| 4. Check out | Alex adds the pink roses to the cart and clicks "Check Out."                            | Updates the cart sidebar, then opens the checkout page. The journey ends here.      | US-05, US-06, US-07 |
+| 4. Check out | Alex adds the pink roses to the cart and clicks "Check Out."                            | Displays the cart drawer and hands off to checkout. The mockup ends before payment. | US-05, US-06, US-07 |
 
 If pink roses are unavailable, the AI suggests an available color so Alex can choose an alternative
-and continue to checkout.
+and continue to checkout. If no alternative is suitable, Alex can return to browsing or leave
+without placing an order. The wireframes illustrate the flow; they do not demonstrate a live
+inventory or payment integration.
 
 ### 1. Visit the Shop
 
 ![Visit the shop wireframe](figma/01-visit-shop.png)
 
+The top navigation and category control support US-01–US-03 and FR-01–FR-04; NFR-01 specifies the
+navigation placement.
+
 ### 2. Search for Roses
 
 ![Search for roses wireframe](figma/02-search-roses.png)
+
+The search and results support US-03 and FR-04–FR-06; availability labels distinguish items that can
+be purchased from those that are out of stock.
 
 ### 3. Ask AI About Availability
 
@@ -234,15 +283,24 @@ and continue to checkout.
 
 ![AI suggests alternatives when flowers are out of stock wireframe](figma/03b-ai-out-of-stock.png)
 
+The chat control and public availability response support US-11–US-12 and FR-22–FR-24. The alternate
+state offers an available color when pink roses are unavailable.
+
 ### 4. Proceed to Checkout
 
 ![Shopping cart and checkout wireframe](figma/04-cart-checkout.png)
+
+The plus control, cart drawer, and Check Out button support US-05–US-07, FR-09–FR-12, and NFR-02;
+payment is outside this illustrated journey.
 
 ## Appendix A: Interview with Lily
 
 ### Conversation
 
-**Full conversation available [at this link](https://chatgpt.com/share/6ade3893-87ec-83e8-87d3-2262c4c1e003)**
+[View the shared interview](https://chatgpt.com/share/6ade3893-87ec-83e8-87d3-2262c4c1e003).
+
+The transcript is preserved as recorded. Open questions in the synopsis include the example AI
+response that exceeds the customer's stated $60 budget once delivery is added.
 
 #### 1. Neil
 
@@ -1102,10 +1160,11 @@ Source: [School project rubric](rubric.pdf).
 
 - [x] **Summarize the interview.** Record confirmed needs, user types, and any remaining assumptions
       separately.
-- [x] **Write 15 distinct user stories.** Use: "As a [role], I want [need], so that [outcome]."
+- [x] **Write at least 15 distinct user stories.** Use: "As a [role], I want [need], so that
+      [outcome]."
 - [x] **Check story coverage.** Include multiple user types and AI-enabled customer support; ensure
       ordering and inventory needs from the interview are represented.
-- [x] **Number and verify the stories.** Label them `US-01` through `US-15` and record the
+- [x] **Number and verify the stories.** Label them `US-01` through `US-18` and record the
       supporting interview answer for each. Ask Lily follow-up questions if needed.
 
 ### 3. Map one user journey
@@ -1155,31 +1214,44 @@ Source: [School project rubric](rubric.pdf).
 
 ### Defaults
 
-Use exactly 15 stories initially and at least 20 requirements; add more only when needed to
-represent Lily's needs. Choose the journey and screen count after the interview.
+The original targets were at least 15 stories and 20 requirements. This writeup contains 18 stories,
+40 functional requirements, and 5 nonfunctional requirements, with five wireframes covering one
+journey and its out-of-stock branch.
 
-Keep this checklist in the project directory as `project_checklist.md`. No agent-instruction
-updates are included.
+The working checklist is available in [project_checklist.md](project_checklist.md).
 
 ## Appendix C: Wireframe Design Conversation
 
+The following transcript records the Figma Make design and export process. Build and export
+statements are reproduced from that conversation.
+
 ### Wireframe Turn 1: User
 
-Aim to deliver your final answer or completed task within 60 seconds. Keep the scope tight and answers concise. If the task needs longer, give me a useful result and clearly state what remains by 60 seconds. Never claim unfinished work is complete.
+Aim to deliver your final answer or completed task within 60 seconds. Keep the scope tight and
+answers concise. If the task needs longer, give me a useful result and clearly state what remains by
+60 seconds. Never claim unfinished work is complete.
 
-I have a project that I need wireframes for. Specifically, we are creating a mockup of a user journey for a hypothetical customer called, "Lily's Flower Shop". See the attached markdown document, read through it for context, and build a set of wireframes based on the section titled `## User Journey: Finding Flowers with AI Assistance`
+I have a project that I need wireframes for. Specifically, we are creating a mockup of a user
+journey for a hypothetical customer called, "Lily's Flower Shop". See the attached markdown
+document, read through it for context, and build a set of wireframes based on the section titled `##
+User Journey: Finding Flowers with AI Assistance`
 
 ### Wireframe Turn 2: Assistant
 
-I’ll retrieve the brief, inspect the existing app structure and styling, then implement the requested user-journey wireframes as a tightly scoped flow.
+I’ll retrieve the brief, inspect the existing app structure and styling, then implement the
+requested user-journey wireframes as a tightly scoped flow.
 
 ### Wireframe Turn 3: Assistant
 
-The brief defines four core states plus an out-of-stock branch; I’m translating those into a responsive storyboard with catalog, search, AI inventory check, and cart/checkout wireframes, including a toggleable alternative-color scenario.
+The brief defines four core states plus an out-of-stock branch; I’m translating those into a
+responsive storyboard with catalog, search, AI inventory check, and cart/checkout wireframes,
+including a toggleable alternative-color scenario.
 
 ### Wireframe Turn 4: Assistant
 
-The full four-step flow is now implemented, including the AI success/fallback branch and synchronized product/cart state; I’m running the project build to catch any TypeScript or styling integration issues.
+The full four-step flow is now implemented, including the AI success/fallback branch and
+synchronized product/cart state; I’m running the project build to catch any TypeScript or styling
+integration issues.
 
 ### Wireframe Turn 5: Assistant
 
@@ -1201,11 +1273,14 @@ Ok, this needs to be a mobile-first design, though
 
 ### Wireframe Turn 7: Assistant
 
-I’ll recast the storyboard around phone-sized screens: compact mobile navigation, two-column product browsing, full-width AI chat, and a bottom-sheet cart, while retaining a useful desktop overview of all four mobile states.
+I’ll recast the storyboard around phone-sized screens: compact mobile navigation, two-column product
+browsing, full-width AI chat, and a bottom-sheet cart, while retaining a useful desktop overview of
+all four mobile states.
 
 ### Wireframe Turn 8: Assistant
 
-The flow now uses true phone-width canvases and mobile interaction patterns rather than scaled desktop pages; I’m checking the revised implementation for build errors.
+The flow now uses true phone-width canvases and mobile interaction patterns rather than scaled
+desktop pages; I’m checking the revised implementation for build errors.
 
 ### Wireframe Turn 9: Assistant
 
@@ -1223,19 +1298,24 @@ Updated the wireframes to a mobile-first design:
 
 ### Wireframe Turn 10: User
 
-Can you add annotations that describe each of the core elements described in user stories, e.g. nav buttons, dropdowns, drawer buttons, etc.?
+Can you add annotations that describe each of the core elements described in user stories, e.g. nav
+buttons, dropdowns, drawer buttons, etc.?
 
 ### Wireframe Turn 11: Assistant
 
-I’ll map the referenced user stories to their specific controls, then add numbered callouts and a concise annotation key beside each mobile wireframe.
+I’ll map the referenced user stories to their specific controls, then add numbered callouts and a
+concise annotation key beside each mobile wireframe.
 
 ### Wireframe Turn 12: Assistant
 
-The source requirements confirm the key behaviors: top inventory navigation, category access, availability states, AI launch/inventory response, plus-control add-to-cart, cart drawer, and checkout handoff. I’m attaching those directly to visible controls with story-linked callouts.
+The source requirements confirm the key behaviors: top inventory navigation, category access,
+availability states, AI launch/inventory response, plus-control add-to-cart, cart drawer, and
+checkout handoff. I’m attaching those directly to visible controls with story-linked callouts.
 
 ### Wireframe Turn 13: Assistant
 
-The annotations are now attached to the actual UI controls and cross-referenced to the relevant stories; I’m running the build once to verify the added components and conditional markers.
+The annotations are now attached to the actual UI controls and cross-referenced to the relevant
+stories; I’m running the build once to verify the added components and conditional markers.
 
 ### Wireframe Turn 14: Assistant
 
@@ -1249,7 +1329,8 @@ Added numbered, story-linked annotations for:
 - Mobile cart drawer
 - Checkout button and handoff behavior
 
-Each mobile wireframe now includes a matching annotation key referencing `FT-01` or its associated user story.
+Each mobile wireframe now includes a matching annotation key referencing `FT-01` or its associated
+user story.
 
 Verification: `pnpm build` passes.
 
@@ -1259,31 +1340,38 @@ Can you create a set of PNG images from this mockup that can be used in a presen
 
 ### Wireframe Turn 16: Assistant
 
-I’ll capture presentation-ready PNGs of the complete storyboard and each annotated mobile step, then place the exports in a clearly named project folder.
+I’ll capture presentation-ready PNGs of the complete storyboard and each annotated mobile step, then
+place the exports in a clearly named project folder.
 
 ### Wireframe Turn 17: Assistant
 
-The supervised preview is available on port 3000, so I’ll export one high-resolution overview plus individual PNGs for all four steps and the AI out-of-stock branch.
+The supervised preview is available on port 3000, so I’ll export one high-resolution overview plus
+individual PNGs for all four steps and the AI out-of-stock branch.
 
 ### Wireframe Turn 18: Assistant
 
-The renderer is producing the six high-resolution exports now; I’m waiting for file validation so I can confirm exact dimensions and filenames.
+The renderer is producing the six high-resolution exports now; I’m waiting for file validation so I
+can confirm exact dimensions and filenames.
 
 ### Wireframe Turn 19: Assistant
 
-The first capture attempt stalled on an unavailable external font request; I’ve isolated that issue and am rerunning with local fallbacks so the PNG export itself is not blocked.
+The first capture attempt stalled on an unavailable external font request; I’ve isolated that issue
+and am rerunning with local fallbacks so the PNG export itself is not blocked.
 
 ### Wireframe Turn 20: Assistant
 
-The local-font fallback resolved the renderer stall and the test PNG validated at 1040×2160; I’m generating the final named set at 2× presentation resolution.
+The local-font fallback resolved the renderer stall and the test PNG validated at 1040×2160; I’m
+generating the final named set at 2× presentation resolution.
 
 ### Wireframe Turn 21: Assistant
 
-Five individual exports are complete; the oversized browser overview was unreliable, so I’m assembling a clean 2×2 presentation board from the validated step images instead.
+Five individual exports are complete; the oversized browser overview was unreliable, so I’m
+assembling a clean 2×2 presentation board from the validated step images instead.
 
 ### Wireframe Turn 22: Assistant
 
-The visual check caught two annotation markers overriding positioned controls; I’m correcting the AI launcher and cart drawer positioning, then regenerating the affected PNGs and overview.
+The visual check caught two annotation markers overriding positioned controls; I’m correcting the AI
+launcher and cart drawer positioning, then regenerating the affected PNGs and overview.
 
 ### Wireframe Turn 23: Assistant
 
@@ -1308,16 +1396,15 @@ Can you quickly export our conversation (just the chat text) in markdown format?
 
 ## References
 
-[Lily's Flower Shop wireframe mockup]. 08/25/2026. Figma. Accessed October 25, 2026.
+[Lily's Flower Shop wireframe mockup]. 2026. Figma. August 25, 2026. Accessed October 25, 2026.
 <https://brook-axis-52217147.figma.site/>.
 
-NeilTheSeal. 08/25/2026 [Managing AI Engineering project files]. GitHub. Accessed October 25, 2026.
+NeilTheSeal. 2026. [Managing AI Engineering project files]. GitHub. August 25, 2026. Accessed
+October 25, 2026.
 <https://github.com/NeilTheSeal/quantic_ai_monorepo/tree/main/projects/project_1_managing_ai_engineering>.
 
-OpenAI. 08/25/2026 -a. [Shared ChatGPT conversation: cx_6adeb28a3e08819185645125de35ece4].
-ChatGPT. Accessed October 25, 2026.
-<https://chatgpt.com/s/cx_6adeb28a3e08819185645125de35ece4>.
+OpenAI. 2026a. [Shared ChatGPT conversation: cx_6adeb28a3e08819185645125de35ece4]. ChatGPT. August
+25, 2026. Accessed October 25, 2026. <https://chatgpt.com/s/cx_6adeb28a3e08819185645125de35ece4>.
 
-OpenAI. 08/25/2026 -b. [Shared ChatGPT conversation: cx_6adeb42ebf408191a226be4051332f15].
-ChatGPT. Accessed October 25, 2026.
-<https://chatgpt.com/s/cx_6adeb42ebf408191a226be4051332f15>.
+OpenAI. 2026b. [Shared ChatGPT conversation: cx_6adeb42ebf408191a226be4051332f15]. ChatGPT. August
+25, 2026. Accessed October 25, 2026. <https://chatgpt.com/s/cx_6adeb42ebf408191a226be4051332f15>.
