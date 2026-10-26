@@ -5,7 +5,8 @@
 This project outlines a proposed website for Lily's Florist to simplify online flower
 ordering, support inventory and order management, and provide AI customer assistance.
 The following sections bring together the interview synopsis, system requirements, user
-stories, and a user journey. The full interview and project checklist appear as appendices.
+stories, and a user journey. The full interview, project checklist, and wireframe design
+conversation appear as appendices.
 
 ## Synopsis
 
@@ -1154,3 +1155,161 @@ represent Lily's needs. Choose the journey and screen count after the interview.
 
 Keep this checklist in the project directory as `project_checklist.md`. No agent-instruction
 updates are included.
+
+## Appendix C: Wireframe Design Conversation
+
+### Wireframe Turn 1: User
+
+Aim to deliver your final answer or completed task within 60 seconds. Keep the scope tight and answers concise. If the task needs longer, give me a useful result and clearly state what remains by 60 seconds. Never claim unfinished work is complete.
+
+I have a project that I need wireframes for. Specifically, we are creating a mockup of a user journey for a hypothetical customer called, "Lily's Flower Shop". See the attached markdown document, read through it for context, and build a set of wireframes based on the section titled `## User Journey: Finding Flowers with AI Assistance`
+
+### Wireframe Turn 2: Assistant
+
+I’ll retrieve the brief, inspect the existing app structure and styling, then implement the requested user-journey wireframes as a tightly scoped flow.
+
+### Wireframe Turn 3: Assistant
+
+The brief defines four core states plus an out-of-stock branch; I’m translating those into a responsive storyboard with catalog, search, AI inventory check, and cart/checkout wireframes, including a toggleable alternative-color scenario.
+
+### Wireframe Turn 4: Assistant
+
+The full four-step flow is now implemented, including the AI success/fallback branch and synchronized product/cart state; I’m running the project build to catch any TypeScript or styling integration issues.
+
+### Wireframe Turn 5: Assistant
+
+Implemented the responsive wireframe journey for **Lily’s Flower Shop**:
+
+- Shop catalog
+- Rose search results with pricing and availability
+- AI inventory assistant
+- Toggleable in-stock/out-of-stock scenarios
+- Alternative flower recommendation
+- Product selection and cart checkout handoff
+- Desktop and mobile-responsive layouts
+
+Verification: `pnpm build` completed successfully.
+
+### Wireframe Turn 6: User
+
+Ok, this needs to be a mobile-first design, though
+
+### Wireframe Turn 7: Assistant
+
+I’ll recast the storyboard around phone-sized screens: compact mobile navigation, two-column product browsing, full-width AI chat, and a bottom-sheet cart, while retaining a useful desktop overview of all four mobile states.
+
+### Wireframe Turn 8: Assistant
+
+The flow now uses true phone-width canvases and mobile interaction patterns rather than scaled desktop pages; I’m checking the revised implementation for build errors.
+
+### Wireframe Turn 9: Assistant
+
+Updated the wireframes to a mobile-first design:
+
+- Phone-sized canvases for all four journey steps
+- Mobile navigation and status bar
+- Two-column product grids
+- Full-screen AI chat experience
+- Mobile bottom-sheet cart
+- Single-column flow on small screens
+- Two-column phone overview on larger screens
+
+`pnpm build` passes successfully.
+
+### Wireframe Turn 10: User
+
+Can you add annotations that describe each of the core elements described in user stories, e.g. nav buttons, dropdowns, drawer buttons, etc.?
+
+### Wireframe Turn 11: Assistant
+
+I’ll map the referenced user stories to their specific controls, then add numbered callouts and a concise annotation key beside each mobile wireframe.
+
+### Wireframe Turn 12: Assistant
+
+The source requirements confirm the key behaviors: top inventory navigation, category access, availability states, AI launch/inventory response, plus-control add-to-cart, cart drawer, and checkout handoff. I’m attaching those directly to visible controls with story-linked callouts.
+
+### Wireframe Turn 13: Assistant
+
+The annotations are now attached to the actual UI controls and cross-referenced to the relevant stories; I’m running the build once to verify the added components and conditional markers.
+
+### Wireframe Turn 14: Assistant
+
+Added numbered, story-linked annotations for:
+
+- Top Shop and Cart navigation
+- Category dropdown and tabs
+- Search field and inventory results
+- AI launcher, conversation drawer, response, and composer
+- Add-to-cart control and quantity confirmation
+- Mobile cart drawer
+- Checkout button and handoff behavior
+
+Each mobile wireframe now includes a matching annotation key referencing `FT-01` or its associated user story.
+
+Verification: `pnpm build` passes.
+
+### Wireframe Turn 15: User
+
+Can you create a set of PNG images from this mockup that can be used in a presentation document?
+
+### Wireframe Turn 16: Assistant
+
+I’ll capture presentation-ready PNGs of the complete storyboard and each annotated mobile step, then place the exports in a clearly named project folder.
+
+### Wireframe Turn 17: Assistant
+
+The supervised preview is available on port 3000, so I’ll export one high-resolution overview plus individual PNGs for all four steps and the AI out-of-stock branch.
+
+### Wireframe Turn 18: Assistant
+
+The renderer is producing the six high-resolution exports now; I’m waiting for file validation so I can confirm exact dimensions and filenames.
+
+### Wireframe Turn 19: Assistant
+
+The first capture attempt stalled on an unavailable external font request; I’ve isolated that issue and am rerunning with local fallbacks so the PNG export itself is not blocked.
+
+### Wireframe Turn 20: Assistant
+
+The local-font fallback resolved the renderer stall and the test PNG validated at 1040×2160; I’m generating the final named set at 2× presentation resolution.
+
+### Wireframe Turn 21: Assistant
+
+Five individual exports are complete; the oversized browser overview was unreliable, so I’m assembling a clean 2×2 presentation board from the validated step images instead.
+
+### Wireframe Turn 22: Assistant
+
+The visual check caught two annotation markers overriding positioned controls; I’m correcting the AI launcher and cart drawer positioning, then regenerating the affected PNGs and overview.
+
+### Wireframe Turn 23: Assistant
+
+Created six presentation-ready PNGs in:
+
+`exports/lilys-flower-shop-wireframes/`
+
+Files:
+
+- `00-complete-journey.png` — 2×2 overview board
+- `01-visit-shop.png`
+- `02-search-roses.png`
+- `03-ai-in-stock.png`
+- `03b-ai-out-of-stock.png`
+- `04-cart-checkout.png`
+
+Individual slides are **1040 × 2160 px**. The overview is **1344 × 2636 px**.
+
+### Wireframe Turn 24: User
+
+Can you quickly export our conversation (just the chat text) in markdown format?
+
+## References
+
+[Lily's Flower Shop wireframe mockup]. 08/25/2026. Figma. Accessed October 25, 2026.
+<https://brook-axis-52217147.figma.site/>.
+
+OpenAI. 08/25/2026 -a. [Shared ChatGPT conversation: cx_6adeb28a3e08819185645125de35ece4].
+ChatGPT. Accessed October 25, 2026.
+<https://chatgpt.com/s/cx_6adeb28a3e08819185645125de35ece4>.
+
+OpenAI. 08/25/2026 -b. [Shared ChatGPT conversation: cx_6adeb42ebf408191a226be4051332f15].
+ChatGPT. Accessed October 25, 2026.
+<https://chatgpt.com/s/cx_6adeb42ebf408191a226be4051332f15>.
