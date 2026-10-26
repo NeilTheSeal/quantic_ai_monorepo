@@ -1311,6 +1311,9 @@ Can you quickly export our conversation (just the chat text) in markdown format?
 [Lily's Flower Shop wireframe mockup]. 08/25/2026. Figma. Accessed October 25, 2026.
 <https://brook-axis-52217147.figma.site/>.
 
+NeilTheSeal. 08/25/2026 [Managing AI Engineering project files]. GitHub. Accessed October 25, 2026.
+<https://github.com/NeilTheSeal/quantic_ai_monorepo/tree/main/projects/project_1_managing_ai_engineering>.
+
 OpenAI. 08/25/2026 -a. [Shared ChatGPT conversation: cx_6adeb28a3e08819185645125de35ece4].
 ChatGPT. Accessed October 25, 2026.
 <https://chatgpt.com/s/cx_6adeb28a3e08819185645125de35ece4>.
