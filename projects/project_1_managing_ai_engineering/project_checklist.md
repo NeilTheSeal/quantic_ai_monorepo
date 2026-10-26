@@ -50,15 +50,15 @@ Source: [School project rubric](rubric.pdf).
 
 ## 4. Define the requirements
 
-- [ ] **Draft at least 20 requirements from the stories.** Include website functionality and
+- [x] **Draft at least 20 requirements from the stories.** Include website functionality and
       AI-enabled customer support.
-- [ ] **Number and categorize them.** Use `FR-01...` for functional requirements and `NFR-01...` for
+- [x] **Number and categorize them.** Use `FR-01...` for functional requirements and `NFR-01...` for
       nonfunctional requirements. Include both categories.
-- [ ] **Make each requirement verifiable.** Replace vague wording with observable behavior or
+- [x] **Make each requirement verifiable.** Replace vague wording with observable behavior or
       measurable constraints. Confirm important unspecified targets with Lily rather than inventing
       them.
-- [ ] **Connect requirements to stories.** Put the supporting story IDs beside every requirement.
-- [ ] **Review the complete set.** Check for ambiguity, contradictions, duplicates, and missing
+- [x] **Connect requirements to stories.** Put the supporting story IDs beside every requirement.
+- [x] **Review the complete set.** Check for ambiguity, contradictions, duplicates, and missing
       customer needs.
 
 ## 5. Create the Figma wireframes
