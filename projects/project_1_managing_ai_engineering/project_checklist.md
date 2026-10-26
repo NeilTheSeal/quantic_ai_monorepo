@@ -63,24 +63,24 @@ Source: [School project rubric](rubric.pdf).
 
 ## 5. Create the Figma wireframes
 
-- [ ] **List the screens and states needed for the journey.** Include the main path and relevant
+- [x] **List the screens and states needed for the journey.** Include the main path and relevant
       problem or recovery states.
-- [ ] **Draw rough wireframes in Figma.** Use simple boxes, labels, and controls; prioritize a clear
+- [x] **Draw rough wireframes in Figma.** Use simple boxes, labels, and controls; prioritize a clear
       flow.
-- [ ] **Annotate the wireframes.** Explain design choices, what happens when controls are used, and
+- [x] **Annotate the wireframes.** Explain design choices, what happens when controls are used, and
       which requirement IDs the elements address.
-- [ ] **Walk through the journey using the wireframes.** Fix missing steps, confusing interactions,
+- [x] **Walk through the journey using the wireframes.** Fix missing steps, confusing interactions,
       and inconsistencies with the requirements.
 
 ## 6. Assemble and submit
 
-- [ ] **Assemble one document.** Include the interview share link, user stories, user journey,
+- [x] **Assemble one document.** Include the interview share link, user stories, user journey,
       requirements, and readable wireframe images with annotations.
-- [ ] **Check it against the rubric.** Verify the counts, multiple user perspectives, AI support
+- [x] **Check it against the rubric.** Verify the counts, multiple user perspectives, AI support
       coverage, both requirement categories, and traceability.
-- [ ] **Export and inspect one PDF of at least four pages.** Check spelling, layout, image
+- [x] **Export and inspect one PDF of at least four pages.** Check spelling, layout, image
       legibility, and that the interview link is accessible.
-- [ ] **Submit through the school dashboard.** Retain a copy of the submitted PDF.
+- [x] **Submit through the school dashboard.** Retain a copy of the submitted PDF.
 
 ## Defaults
 
