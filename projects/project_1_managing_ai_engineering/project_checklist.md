@@ -34,18 +34,18 @@ Source: [School project rubric](rubric.pdf).
 - [x] **Write 15 distinct user stories.** Use: "As a [role], I want [need], so that [outcome]."
 - [x] **Check story coverage.** Include multiple user types and AI-enabled customer support; ensure
       ordering and inventory needs from the interview are represented.
-- [ ] **Number and verify the stories.** Label them `US-01` through `US-15` and record the
+- [x] **Number and verify the stories.** Label them `US-01` through `US-15` and record the
       supporting interview answer for each. Ask Lily follow-up questions if needed.
 
 ## 3. Map one user journey
 
-- [ ] **Choose one goal from the stories.** Select a concrete task that will also work well as a
+- [x] **Choose one goal from the stories.** Select a concrete task that will also work well as a
       wireframe sequence.
-- [ ] **Define the persona and scenario.** State who the user is, what prompted the task, and what
+- [x] **Define the persona and scenario.** State who the user is, what prompted the task, and what
       success means. List the related story IDs.
-- [ ] **Map the successful path.** For each step, record the user's action, the system's response,
+- [x] **Map the successful path.** For each step, record the user's action, the system's response,
       and the next step.
-- [ ] **Add relevant alternate paths.** Show likely problems, dead ends, and how the user recovers
+- [x] **Add relevant alternate paths.** Show likely problems, dead ends, and how the user recovers
       or gets help.
 
 ## 4. Define the requirements
