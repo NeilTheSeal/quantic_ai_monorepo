@@ -25,3 +25,5 @@ browser_extensions/sync_server/
 browser_extensions/repo_watch/
 
 web_apps/anthropic_personal_chat/
+
+**/.DS_Store
