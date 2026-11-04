@@ -51,7 +51,7 @@
           "push": "git@github.com:NeilTheSeal/repo_watch.git"
         }
       },
-      "auto-pull": false
+      "auto-pull": true
     },
     {
       "name": "anthropic_personal_chat",
@@ -67,7 +67,19 @@
           "push": "https://git.heroku.com/anthropic-personal-chat.git"
         }
       },
-      "auto-pull": false
+      "auto-pull": true
+    },
+    {
+      "name": "groq-local-proxy",
+      "path": "web_apps/groq-local-proxy",
+      "branch": "main",
+      "remotes": {
+        "origin": {
+          "fetch": "git@github.com:NeilTheSeal/groq-local-proxy.git",
+          "push": "git@github.com:NeilTheSeal/groq-local-proxy.git"
+        }
+      },
+      "auto-pull": true
     }
   ]
 }
