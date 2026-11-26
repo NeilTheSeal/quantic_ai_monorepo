@@ -118,6 +118,9 @@ def describe_images(
             url = futures[future]
             try:
                 cache[url] = future.result()
+            except anthropic.AuthenticationError, anthropic.PermissionDeniedError:
+                # Every other image would fail the same way; stop the whole run.
+                raise
             except (anthropic.APIError, OSError, ValueError) as err:
                 failures += 1
                 log.warning("Could not describe %s: %s", url, err)
