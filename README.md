@@ -25,6 +25,7 @@ quantic_ai_monorepo/
 │       └── lesson_1/                # One folder per lesson
 ├── browser_extensions/
 │   ├── tampermonkey/                # Userscripts, installed by URL; not linted or formatted
+│   │   └── course_summarize/        # TS userscript: captures lessons to sync_files (linted, built)
 │   ├── sync_server/                 # WebDAV sync server on Heroku (own git repo, gitignored)
 │   └── repo_watch/                  # VS Code extension: fetch-all on a timer, toasts + Problems
 ├── web_apps/

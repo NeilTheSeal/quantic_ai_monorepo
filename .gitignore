@@ -28,3 +28,6 @@ web_apps/anthropic_personal_chat/
 web_apps/groq-local-proxy
 
 **/.DS_Store
+
+# Saved Quantic pages and API responses (course content, user ids): never publish
+browser_extensions/tampermonkey/course_html_examples/

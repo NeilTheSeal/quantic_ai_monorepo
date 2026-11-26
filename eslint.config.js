@@ -19,7 +19,9 @@ export default defineConfig(
       "**/.venv/",
       "**/*.min.js",
       // Tampermonkey userscripts run unbundled in the browser; they are not part of a project.
-      "browser_extensions/tampermonkey/",
+      // course_summarize/ is the exception: a TypeScript project bundled into dist/.
+      "browser_extensions/tampermonkey/*",
+      "!browser_extensions/tampermonkey/course_summarize/",
       // Nested git repos holding synced data, not code.
       "**/sync_files/",
     ],

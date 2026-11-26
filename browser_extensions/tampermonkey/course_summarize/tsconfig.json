@@ -1,0 +1,18 @@
+{
+  /* Strictness comes from the monorepo root. This project is not a nested repo, so it extends
+     the root file directly instead of a generated copy. Covers src (browser code); tests have
+     their own tsconfig that adds Node types. esbuild does the bundling, tsc only type-checks. */
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["es2023", "dom", "dom.iterable"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "noEmit": true,
+    "erasableSyntaxOnly": true,
+    /* Imports end in .ts so node:test can load src directly; esbuild resolves them too. */
+    "allowImportingTsExtensions": true,
+    "types": ["tampermonkey"]
+  },
+  "include": ["src/**/*"]
+}

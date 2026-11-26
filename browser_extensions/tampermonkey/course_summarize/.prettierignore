@@ -1,0 +1,4 @@
+# Prettier reads the ignore file from the working directory only, not the repo root.
+dist/
+node_modules/
+package-lock.json
