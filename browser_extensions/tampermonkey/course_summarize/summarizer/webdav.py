@@ -7,6 +7,8 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 
+from summarizer.tls import SSL_CONTEXT
+
 DAV = "{DAV:}"
 TIMEOUT_S = 120
 
@@ -21,10 +23,13 @@ class WebDavError(RuntimeError):
     pass
 
 
-def parse_propfind(xml_body: bytes, folder_path: str) -> list[Entry]:
-    """Children of `folder_path` in a Depth: 1 PROPFIND response (the folder itself excluded)."""
+def parse_propfind(xml_body: bytes, folder_path: str, base_path: str = "/") -> list[Entry]:
+    """Children of `folder_path` in a Depth: 1 PROPFIND response (the folder itself excluded).
+
+    `base_path` is the path part of the server URL, for servers mounted below the root.
+    """
     root = ET.fromstring(xml_body)
-    own = "/" + folder_path.strip("/")
+    own = "/" + "/".join(p for p in (base_path.strip("/"), folder_path.strip("/")) if p)
     entries: list[Entry] = []
     for response in root.iter(f"{DAV}response"):
         href = response.findtext(f"{DAV}href") or ""
@@ -60,7 +65,9 @@ class WebDav:
             headers={"Authorization": self._auth, **(headers or {})},
         )
         try:
-            with urllib.request.urlopen(request, timeout=TIMEOUT_S) as response:
+            with urllib.request.urlopen(
+                request, timeout=TIMEOUT_S, context=SSL_CONTEXT
+            ) as response:
                 return response.status, response.read()
         except urllib.error.HTTPError as err:
             return err.code, err.read()
@@ -72,7 +79,7 @@ class WebDav:
             return []
         if status != 207:
             raise WebDavError(f"PROPFIND {path} returned HTTP {status}")
-        return parse_propfind(body, path)
+        return parse_propfind(body, path, urllib.parse.urlsplit(self._base).path)
 
     def get(self, path: str) -> bytes | None:
         """File contents, or None if it doesn't exist."""

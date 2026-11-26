@@ -109,7 +109,8 @@ def describe_images(
     todo = {url: context for url, (_, context) in jobs.items() if url not in cache}
     failures = 0
     done = 0
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
+    pool = ThreadPoolExecutor(max_workers=MAX_WORKERS)
+    try:
         futures = {
             pool.submit(describe_image, client, url, context): url for url, context in todo.items()
         }
@@ -117,10 +118,16 @@ def describe_images(
             url = futures[future]
             try:
                 cache[url] = future.result()
-            except (anthropic.APIError, OSError) as err:
+            except (anthropic.APIError, OSError, ValueError) as err:
                 failures += 1
                 log.warning("Could not describe %s: %s", url, err)
             done += 1
             if on_progress is not None:
                 on_progress(done, len(todo))
+    except BaseException:
+        # Ctrl-C or an unexpected error: don't keep paying for queued images whose results
+        # would be thrown away.
+        pool.shutdown(wait=False, cancel_futures=True)
+        raise
+    pool.shutdown()
     return failures

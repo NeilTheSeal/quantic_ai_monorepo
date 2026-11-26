@@ -14,10 +14,11 @@ from summarizer.captions import describe_images
 from summarizer.corpus import ImageRef, image_jobs, render_course
 from summarizer.course import Course, parse_course_file, parse_lesson_file
 from summarizer.fetch import download
-from summarizer.summary import Pdf, Usage, write_summary
+from summarizer.summary import Pdf, SummaryError, Usage, write_summary
 from summarizer.webdav import Entry
 
 COURSES = "courses"
+MARKDOWN = "text/markdown; charset=utf-8"
 log = logging.getLogger(__name__)
 
 
@@ -121,9 +122,14 @@ def footer(when: datetime, model: str, lesson_count: int) -> str:
 def summarize_course(store: Store, slug: str, output_root: Path, services: Services) -> str:
     """Summarizes one course if it is complete and not yet summarized. Returns a status line."""
     local = output_root / slug / "summary.md"
-    if local.exists():
-        return "already summarized"
     remote = store.get(working_path(slug, "summary.md"))
+    if local.exists():
+        if remote is None:
+            # An earlier run wrote the local file but its upload failed; finish the upload so
+            # the other machine doesn't pay for the course again.
+            store.put(working_path(slug, "summary.md"), local.read_bytes(), MARKDOWN)
+            return "already summarized (uploaded the missing server copy)"
+        return "already summarized"
     if remote is not None:
         # Summarized on the other machine: restore the local copy instead of paying again.
         local.parent.mkdir(parents=True, exist_ok=True)
@@ -142,6 +148,9 @@ def summarize_course(store: Store, slug: str, output_root: Path, services: Servi
         return "skipped: no ungraded lessons"
 
     log.info("Summarizing %s (%d ungraded lessons)", course.title, len(lessons))
+    excluded = [lesson.title for lesson in course.lessons if course.is_graded(lesson)]
+    if excluded:
+        log.info("  leaving out graded lessons: %s", "; ".join(excluded))
     captions = _load_captions(store, slug)
     jobs = image_jobs(course)
     new = [url for url in jobs if url not in captions]
@@ -149,24 +158,39 @@ def summarize_course(store: Store, slug: str, output_root: Path, services: Servi
         log.info("  describing %d new images (%d cached)", len(new), len(jobs) - len(new))
         try:
             failures = services.describe(jobs, captions)
-        finally:
-            # Save whatever was described, even if the run stops partway.
-            _put_json(store, working_path(slug, "image_captions.json"), captions)
+        except BaseException:
+            # Keep what was described so a re-run only pays for the rest, but never let a
+            # failed save hide the original error.
+            try:
+                _put_json(store, working_path(slug, "image_captions.json"), captions)
+            except Exception as save_err:  # any store failure: logged, the original error wins
+                log.warning("  could not save image descriptions: %s", save_err)
+            raise
+        _put_json(store, working_path(slug, "image_captions.json"), captions)
         if failures:
-            log.warning("  %d images could not be described; they appear by label only", failures)
+            # A summary without its code screenshots would be permanent; stop and let a
+            # re-run retry just the failed images.
+            raise SummaryError(f"{failures} images could not be described; run again to retry")
 
     corpus = render_course(course, captions)
-    store.put(working_path(slug, "corpus.md"), corpus.encode(), "text/markdown; charset=utf-8")
+    store.put(working_path(slug, "corpus.md"), corpus.encode(), MARKDOWN)
     pdfs = _fetch_pdfs(course, services.fetch)
     log.info("  corpus %s characters, %d PDFs; calling the model", f"{len(corpus):,}", len(pdfs))
 
-    markdown, usage = services.summarize(course.title, corpus, pdfs)
+    try:
+        markdown, usage = services.summarize(course.title, corpus, pdfs)
+    except SummaryError as err:
+        if err.partial:
+            # Paid-for output; keep it for inspection. It never counts as a summary.
+            store.put(working_path(slug, "summary_partial.md"), err.partial.encode(), MARKDOWN)
+        raise
     when = services.now()
     document = markdown + footer(when, usage.model, len(lessons))
 
+    # Server first: a local file alone would mark the course done on this machine only.
+    store.put(working_path(slug, "summary.md"), document.encode(), MARKDOWN)
     local.parent.mkdir(parents=True, exist_ok=True)
     local.write_text(document, encoding="utf-8")
-    store.put(working_path(slug, "summary.md"), document.encode(), "text/markdown; charset=utf-8")
     _put_json(
         store,
         working_path(slug, "summary_meta.json"),

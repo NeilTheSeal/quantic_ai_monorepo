@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from summarizer.corpus import ImageRef
 from summarizer.pipeline import Services, course_slugs, summarize_course
-from summarizer.summary import Pdf, Usage
+from summarizer.summary import Pdf, SummaryError, Usage
 from summarizer.webdav import Entry
 
 from tests.summarizer.conftest import course_record, lesson_record
@@ -49,10 +49,17 @@ def captured(lesson_ids: tuple[str, ...] = ("l1", "l2")) -> dict[str, bytes]:
 
 
 class Recorder:
-    def __init__(self, fail_describe: bool = False) -> None:
+    def __init__(
+        self,
+        fail_describe: bool = False,
+        describe_failures: int = 0,
+        summary_error: SummaryError | None = None,
+    ) -> None:
         self.described: list[str] = []
         self.summarized: list[tuple[str, str, list[str]]] = []
         self.fail_describe = fail_describe
+        self.describe_failures = describe_failures
+        self.summary_error = summary_error
 
     def describe(self, jobs: dict[str, tuple[ImageRef, str]], cache: dict[str, str]) -> int:
         for url in jobs:
@@ -62,10 +69,12 @@ class Recorder:
                 raise OSError("network down")
             cache[url] = f"description of {url}"
             self.described.append(url)
-        return 0
+        return self.describe_failures
 
     def summarize(self, title: str, corpus: str, pdfs: list[Pdf]) -> tuple[str, Usage]:
         self.summarized.append((title, corpus, [pdf.title for pdf in pdfs]))
+        if self.summary_error is not None:
+            raise self.summary_error
         return "# Python I: Fundamentals\n\nGuide.\n", Usage(input_tokens=1000, output_tokens=100)
 
     def services(self) -> Services:
@@ -116,14 +125,25 @@ def test_full_run_writes_summary_and_working_files(tmp_path: Path) -> None:
     assert meta["estimated_cost_usd"] == pytest.approx(0.006)
 
 
-def test_existing_local_summary_is_left_alone(tmp_path: Path) -> None:
+def test_existing_summary_is_left_alone(tmp_path: Path) -> None:
     (tmp_path / SLUG).mkdir()
     (tmp_path / SLUG / "summary.md").write_text("mine")
-    store = MemoryStore(captured())
+    store = MemoryStore({**captured(), f"courses/{SLUG}/working/summary.md": b"mine"})
     recorder = Recorder()
     assert summarize_course(store, SLUG, tmp_path, recorder.services()) == "already summarized"
     assert recorder.summarized == []
     assert store.puts == []
+
+
+def test_local_summary_missing_on_the_server_is_uploaded(tmp_path: Path) -> None:
+    (tmp_path / SLUG).mkdir()
+    (tmp_path / SLUG / "summary.md").write_text("mine")
+    store = MemoryStore(captured())
+    recorder = Recorder()
+    status = summarize_course(store, SLUG, tmp_path, recorder.services())
+    assert status == "already summarized (uploaded the missing server copy)"
+    assert store.files[f"courses/{SLUG}/working/summary.md"] == b"mine"
+    assert recorder.summarized == []
 
 
 def test_summary_from_the_other_machine_is_restored_not_regenerated(tmp_path: Path) -> None:
@@ -165,3 +185,37 @@ def test_descriptions_are_saved_even_when_describing_fails(tmp_path: Path) -> No
         summarize_course(store, SLUG, tmp_path, recorder.services())
     assert f"courses/{SLUG}/working/image_captions.json" in store.puts
     assert recorder.summarized == []
+
+
+def test_failed_image_descriptions_stop_before_the_summary(tmp_path: Path) -> None:
+    store = MemoryStore(captured())
+    recorder = Recorder(describe_failures=1)
+    with pytest.raises(SummaryError, match="run again"):
+        summarize_course(store, SLUG, tmp_path, recorder.services())
+    assert recorder.summarized == []
+    assert f"courses/{SLUG}/working/image_captions.json" in store.puts
+
+
+def test_partial_output_is_kept_but_never_counts_as_a_summary(tmp_path: Path) -> None:
+    store = MemoryStore(captured())
+    recorder = Recorder(summary_error=SummaryError("stopped early", partial="# Half a guide"))
+    with pytest.raises(SummaryError):
+        summarize_course(store, SLUG, tmp_path, recorder.services())
+    assert store.files[f"courses/{SLUG}/working/summary_partial.md"] == b"# Half a guide"
+    assert f"courses/{SLUG}/working/summary.md" not in store.files
+    assert not (tmp_path / SLUG / "summary.md").exists()
+
+
+class FailingSummaryPut(MemoryStore):
+    def put(self, path: str, body: bytes, content_type: str) -> None:
+        if path.endswith("working/summary.md"):
+            raise OSError("server down")
+        super().put(path, body, content_type)
+
+
+def test_server_copy_is_written_before_the_local_file(tmp_path: Path) -> None:
+    store = FailingSummaryPut(captured())
+    with pytest.raises(OSError):
+        summarize_course(store, SLUG, tmp_path, Recorder().services())
+    # No local file, so the next run tries again instead of calling it done.
+    assert not (tmp_path / SLUG / "summary.md").exists()

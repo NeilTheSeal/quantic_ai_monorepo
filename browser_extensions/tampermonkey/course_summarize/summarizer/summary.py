@@ -1,6 +1,7 @@
 """Writes a course study guide with Claude Opus 5.5 from the corpus and Quantic's PDFs."""
 
 import base64
+import re
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
@@ -15,7 +16,7 @@ from anthropic.types.beta import (
 )
 
 SUMMARY_MODEL = "claude-opus-5-5"
-MAX_TOKENS = 64_000
+MAX_TOKENS = 128_000  # the model's output maximum: thinking and the whole guide share it
 MAX_CONTINUATIONS = 5
 FALLBACK_BETA = "server-side-fallback-2026-07-01"
 WEB_SEARCH: BetaToolUnionParam = {
@@ -49,8 +50,9 @@ is lost. Beyond that, help the reader actually learn the subject: add background
 the course skips, explain why things work, add worked examples, and point to further reading.
 
 Course material forms the body of the guide. Everything you add from outside the course goes \
-in a blockquote that begins `> **Beyond the course:**`. Never attribute your additions to \
-Quantic."""
+in a blockquote that begins `> **Beyond the course:**`, except in the guide's two closing \
+sections, "Where Quantic differs from other sources" and "Further reading", which are yours by \
+definition. Never attribute your additions to Quantic."""
 
 TASK = """\
 Above is Quantic's course "{title}": its own PDFs (a course summary and handouts, which count \
@@ -58,8 +60,9 @@ as Quantic material) and the captured lessons, slide by slide.
 
 How to read the corpus: each slide gives its instructions, its text (popover asides are \
 inlined in parentheses), transcriptions of its images, and its practice questions with the \
-correct (✓) and incorrect (✗) answers and Quantic's feedback on each. Feedback on wrong answers \
-often names a common mistake. Key-term lists name terms without definitions; define each from \
+correct (✓) and incorrect (✗) answers and Quantic's feedback on each; options marked • are \
+polls or reflections with no right answer. Feedback on wrong answers often names a common \
+mistake. Key-term lists name terms without definitions; define each from \
 the slides. Graded assessments are deliberately left out; don't speculate about them.
 
 Write the study guide as one Markdown document:
@@ -81,11 +84,17 @@ official documentation and long-lived references.
 Completeness matters more than brevity, because the reader can't go back to the lessons; \
 leave out filler. Keep software-setup and file-saving steps brief unless they teach something \
 lasting. Use clean Markdown: one H1, blank lines around headings and code blocks, a language on \
-every code fence, no emoji. Output only the document."""
+every code fence, no emoji.
+
+Do all of your web searches before you start writing, then write the document in one pass. \
+Your text output is saved verbatim as the guide, so output only the document: no preamble, no \
+remarks about searching, nothing after it."""
 
 
 class SummaryError(RuntimeError):
-    pass
+    def __init__(self, message: str, partial: str = "") -> None:
+        super().__init__(message)
+        self.partial = partial
 
 
 @dataclass(slots=True)
@@ -146,8 +155,44 @@ def build_user_content(
 
 
 def response_text(blocks: Sequence[BetaContentBlock]) -> str:
-    """The document text in a response (search results and thinking are not part of it)."""
+    """The document text in a response (search results and thinking are not part of it).
+
+    After a mid-output refusal fallback, the declined model's partial text stays: the fallback
+    model continues from it.
+    """
     return "".join(block.text for block in blocks if block.type == "text")
+
+
+def extract_document(text: str) -> str:
+    """The guide from its H1 on, dropping any stray remarks the model wrote before it."""
+    match = re.search(r"^# ", text, flags=re.MULTILINE)
+    return (text[match.start() :] if match else text).strip() + "\n"
+
+
+def echo_content(blocks: Sequence[BetaContentBlock]) -> list[BetaContentBlock]:
+    """A turn's content as it must be sent back to continue it.
+
+    Before the last `fallback` block (a model that declined mid-output), the API rejects
+    thinking, tool-use, unpaired server-tool-use and unrecognized blocks; text, paired
+    server-tool blocks and the `fallback` block itself are kept in place.
+    """
+    boundary = max((i for i, b in enumerate(blocks) if b.type == "fallback"), default=-1)
+    result_ids = {
+        tool_use_id
+        for b in blocks
+        if b.type.endswith("_tool_result")
+        and isinstance(tool_use_id := getattr(b, "tool_use_id", None), str)
+    }
+    kept: list[BetaContentBlock] = []
+    for i, block in enumerate(blocks):
+        if i < boundary:
+            if block.type == "server_tool_use":
+                if block.id not in result_ids:
+                    continue
+            elif not (block.type in ("text", "fallback") or block.type.endswith("_tool_result")):
+                continue
+        kept.append(block)
+    return kept
 
 
 def write_summary(
@@ -185,14 +230,19 @@ def write_summary(
         parts.append(response_text(response.content))
 
         match response.stop_reason:
+            case "end_turn" | "stop_sequence":
+                return extract_document("".join(parts)), usage
             case "pause_turn":
                 # The server-side search loop paused; send the turn back so it continues.
-                messages.append({"role": "assistant", "content": response.content})
+                messages.append({"role": "assistant", "content": echo_content(response.content)})
                 continue
             case "refusal":
-                raise SummaryError("The model declined to write the summary")
+                raise SummaryError("The model declined to write the summary", "".join(parts))
             case "max_tokens":
-                raise SummaryError(f"The summary hit the {MAX_TOKENS}-token output limit")
-            case _:
-                return "".join(parts).strip() + "\n", usage
-    raise SummaryError(f"Still paused after {MAX_CONTINUATIONS} continuations")
+                raise SummaryError(
+                    f"The summary hit the {MAX_TOKENS}-token output limit", "".join(parts)
+                )
+            case other:
+                # model_context_window_exceeded, tool_use, None...: never save a cut-off guide.
+                raise SummaryError(f"The summary stopped early ({other})", "".join(parts))
+    raise SummaryError(f"Still paused after {MAX_CONTINUATIONS} continuations", "".join(parts))

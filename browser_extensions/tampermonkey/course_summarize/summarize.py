@@ -7,9 +7,11 @@ courses/<course>/summary.md in the monorepo. Working data (image descriptions, t
 copy of the summary) goes back to the sync server under courses/<course>/working/.
 """
 
+import http.client
 import logging
 import os
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import anthropic
@@ -40,11 +42,24 @@ def main() -> None:
     store = WebDav(os.environ["WEBDAV_URL"], os.environ["WEBDAV_USER"], os.environ["WEBDAV_PASS"])
     services = anthropic_services(anthropic.Anthropic(max_retries=4))
 
+    try:
+        slugs = course_slugs(store)
+    except (WebDavError, OSError, http.client.HTTPException, ET.ParseError) as err:
+        sys.exit(f"Could not list courses on the sync server: {err}")
+
     failed = 0
-    for slug in course_slugs(store):
+    for slug in slugs:
         try:
             status = summarize_course(store, slug, OUTPUT_ROOT, services)
-        except (anthropic.APIError, WebDavError, SummaryError, OSError, ValueError) as err:
+        except (
+            anthropic.APIError,
+            WebDavError,
+            SummaryError,
+            OSError,
+            ValueError,
+            http.client.HTTPException,
+            ET.ParseError,
+        ) as err:
             failed += 1
             log.error("%s: failed: %s", slug, err)
             continue

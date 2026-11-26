@@ -4,6 +4,8 @@
 # --- Runtime ---
 anthropic>=2.14.0
 python-dotenv>=1.2.4
+# OS trust store for urllib's TLS; already installed with anthropic (via httpx2)
+truststore>=0.10.5
 
 # --- Dev tools (configured in the monorepo root pyproject.toml) ---
 ruff>=0.17.6

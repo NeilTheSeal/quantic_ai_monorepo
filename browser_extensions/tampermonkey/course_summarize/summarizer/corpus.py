@@ -8,6 +8,7 @@ appear as their cached descriptions. Graded lessons, `author_comments`, and the 
 """
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from summarizer.course import Course, Lesson, string_list
@@ -113,16 +114,33 @@ def unescape_answer(value: str) -> str:
     return re.sub(r"\\(['\"])", r"\1", value)
 
 
-def _render_challenge(index: int, challenge: JsonObject) -> list[str]:
+def _answer_mark(answer: JsonObject) -> str:
+    """✓ correct, ✗ incorrect, • a poll or reflection option with no right answer."""
+    match answer.get("is_correct"):
+        case True:
+            return "✓"
+        case False:
+            return "✗"
+        case _:
+            return "•"
+
+
+def _render_challenge(
+    index: int, challenge: JsonObject, place_images: Callable[[str], str]
+) -> list[str]:
     lines: list[str] = []
     prompt = text(challenge.get("prompt_text"))
     heading = f"- Question {index}" + (f": {prompt}" if prompt else "")
     lines.append(heading)
+    blank = text(challenge.get("blank_text"))
+    if blank is not None and inline_image_labels(blank):
+        # Image blanks (type-in answers over a screenshot): the image is the blank's context.
+        lines.append(f"  - Blank: {place_images(blank)}")
     typed = text(challenge.get("correct_answer_text"))
     if typed is not None:
         lines.append(f"  - Typed answer: `{unescape_answer(typed)}`")
     for answer in objs(challenge.get("answers")):
-        mark = "✓" if answer.get("is_correct") is True else "✗"
+        mark = _answer_mark(answer)
         answer_text = text(answer.get("text")) or "(image answer)"
         feedback = text(answer.get("message"))
         lines.append(f"  - {mark} {answer_text}" + (f" — Feedback: {feedback}" if feedback else ""))
@@ -144,19 +162,26 @@ def render_slide(
     parts = [f"### Slide {number} ({instructions})"]
     if objective:
         parts.append(f"Learning objective: {objective}")
+
+    def place_images(markdown: str) -> str:
+        return INLINE_IMAGE.sub(inline, markdown)
+
     main = text(description.get("main_text"))
+    challenges = objs(description.get("challenges"))
+    # Images placed in the text or in a blank are described there, not again in the list.
     used_labels = inline_image_labels(main or "")
+    for challenge in challenges:
+        used_labels |= inline_image_labels(text(challenge.get("blank_text")) or "")
     if main:
-        parts.append(INLINE_IMAGE.sub(inline, main))
+        parts.append(place_images(main))
     for image in images:
         if image.label not in used_labels:
             parts.append(_describe(image, captions))
-    challenges = objs(description.get("challenges"))
     if challenges:
         kind = text(description.get("type")) or "question"
         lines = [f"Practice ({kind.replace('_', ' ')}):"]
         for i, challenge in enumerate(challenges, start=1):
-            lines.extend(_render_challenge(i, challenge))
+            lines.extend(_render_challenge(i, challenge, place_images))
         parts.append("\n".join(lines))
     return "\n\n".join(parts)
 

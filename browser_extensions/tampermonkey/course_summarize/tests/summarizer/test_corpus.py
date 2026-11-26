@@ -2,7 +2,13 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pytest
-from summarizer.corpus import image_jobs, render_course, shown_images, unescape_answer
+from summarizer.corpus import (
+    image_jobs,
+    render_course,
+    render_slide,
+    shown_images,
+    unescape_answer,
+)
 from summarizer.course import Course, parse_course_file, parse_lesson_file
 
 from tests.summarizer.conftest import frame
@@ -43,6 +49,28 @@ def test_render_course_content(make_course: Callable[..., Course]) -> None:
     assert "  - Typed answer: `isn't`" in corpus
 
 
+def test_poll_options_are_neither_right_nor_wrong() -> None:
+    poll = frame()
+    description = poll["tutor_bot_description"]
+    assert isinstance(description, dict)
+    description["challenges"] = [{"answers": [{"text": "Worked great!", "is_correct": None}]}]
+    assert "  - • Worked great!" in render_slide(1, poll, {}, None)
+
+
+def test_image_blanks_carry_their_image_description() -> None:
+    slide = frame()
+    description = slide["tutor_bot_description"]
+    assert isinstance(description, dict)
+    description["main_text"] = "Type the command."
+    description["challenges"] = [
+        {"correct_answer_text": "print", "blank_text": "!![inline_code]{left,height:35}"}
+    ]
+    captions = {"https://uploads.example/inline_code.png": "```python\nprint('hi')\n```"}
+    rendered = render_slide(1, slide, captions, None)
+    assert "  - Blank: [Image: inline_code]\n\n```python\nprint('hi')\n```" in rendered
+    assert rendered.count("[Image: inline_code]") == 1, "not listed again with the slide images"
+
+
 def test_images_without_a_description_appear_by_label(make_course: Callable[..., Course]) -> None:
     assert "[Image: shown (no description)]" in render_course(make_course(), {})
 
@@ -75,3 +103,4 @@ def test_real_course() -> None:
     corpus = render_course(course, {})
     assert "Putting the Python Pieces Together" not in corpus
     assert corpus.count("## Lesson ") == 9
+    assert "- Blank: [Image:" in corpus, "image blanks are placed in their questions"

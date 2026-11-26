@@ -4,12 +4,14 @@ from typing import cast
 
 import anthropic
 import pytest
-from anthropic.types.beta import BetaMessage
+from anthropic.types.beta import BetaContentBlock, BetaMessage
 from summarizer.summary import (
     Pdf,
     SummaryError,
     Usage,
     build_user_content,
+    echo_content,
+    extract_document,
     write_summary,
 )
 
@@ -103,11 +105,78 @@ def test_pause_turn_is_continued_and_text_joined() -> None:
     assert [turn["role"] for turn in second] == ["user", "assistant"]
 
 
-@pytest.mark.parametrize(("stop", "match"), [("refusal", "declined"), ("max_tokens", "limit")])
-def test_unusable_endings_raise(stop: str, match: str) -> None:
+@pytest.mark.parametrize(
+    ("stop", "match"),
+    [
+        ("refusal", "declined"),
+        ("max_tokens", "limit"),
+        ("model_context_window_exceeded", "stopped early"),
+        ("tool_use", "stopped early"),
+    ],
+)
+def test_unusable_endings_raise_with_the_partial_text(stop: str, match: str) -> None:
     fake = FakeClient((stop, "partial"))
-    with pytest.raises(SummaryError, match=match):
+    with pytest.raises(SummaryError, match=match) as raised:
         write_summary(fake.client(), "Course", "corpus", [])
+    assert raised.value.partial == "partial"
+
+
+def test_extract_document_drops_text_before_the_title() -> None:
+    text = "I'll check a few links first.\n\n# Course\n\nBody"
+    assert extract_document(text) == "# Course\n\nBody\n"
+    assert extract_document("no heading at all") == "no heading at all\n"
+
+
+def blocks(*items: dict[str, object]) -> list[BetaContentBlock]:
+    return list(
+        BetaMessage.model_validate(
+            {
+                "id": "m",
+                "type": "message",
+                "role": "assistant",
+                "model": "claude-opus-5-5",
+                "content": list(items),
+                "stop_reason": "pause_turn",
+                "stop_sequence": None,
+                "usage": {"input_tokens": 1, "output_tokens": 1},
+            }
+        ).content
+    )
+
+
+def test_echo_content_filters_blocks_before_the_last_fallback() -> None:
+    content = blocks(
+        {"type": "thinking", "thinking": "", "signature": "s"},
+        {"type": "text", "text": "partial ", "citations": None},
+        {"type": "server_tool_use", "id": "srvtoolu_1", "name": "web_search", "input": {}},
+        {"type": "server_tool_use", "id": "srvtoolu_2", "name": "web_search", "input": {}},
+        {"type": "web_search_tool_result", "tool_use_id": "srvtoolu_1", "content": []},
+        {
+            "type": "fallback",
+            "from": {"model": "claude-opus-5-5"},
+            "to": {"model": "claude-opus-4-8"},
+            "trigger": {"type": "refusal", "category": None},
+        },
+        {"type": "thinking", "thinking": "", "signature": "t"},
+        {"type": "text", "text": "rest", "citations": None},
+    )
+    kept = echo_content(content)
+    assert [b.type for b in kept] == [
+        "text",
+        "server_tool_use",
+        "web_search_tool_result",
+        "fallback",
+        "thinking",
+        "text",
+    ]
+
+
+def test_echo_content_without_a_fallback_keeps_everything() -> None:
+    content = blocks(
+        {"type": "thinking", "thinking": "", "signature": "s"},
+        {"type": "text", "text": "x", "citations": None},
+    )
+    assert len(echo_content(content)) == 2
 
 
 def test_estimated_cost() -> None:
