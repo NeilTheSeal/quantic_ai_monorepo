@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Quantic Course Capture
 // @namespace    http://tampermonkey.net
-// @version      0.1.1
+// @version      0.2.0
 // @description  Captures Quantic lesson content from the app's API and uploads it to the WebDAV sync server for later summarization.
 // @author       Neil Hendren
 // @updateURL    https://raw.githubusercontent.com/NeilTheSeal/quantic_ai_monorepo/refs/heads/main/browser_extensions/tampermonkey/course_summarize/dist/course_summarize.user.js
@@ -143,8 +143,8 @@
       lessonsInChapter: stream.lessons.length
     };
   }
-  function byteLength(text) {
-    return new TextEncoder().encode(text).length;
+  function byteLength(text2) {
+    return new TextEncoder().encode(text2).length;
   }
   function serialize(record, maxBytes = MAX_BODY_BYTES) {
     const pretty = JSON.stringify(record, null, 2);
@@ -228,6 +228,237 @@
     }
     return plan;
   }
+
+  // src/answers.ts
+  var GRADED_TITLE = /\bsmart\s*cases?\b|\bexams?\b|\bassessments?\b/i;
+  function isObject2(value) {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+  }
+  function text(value) {
+    return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+  }
+  function unescapeAnswer(value) {
+    return value.replace(/\\(['"])/g, "$1");
+  }
+  function readFrame(description) {
+    const challenges = [];
+    const correctIn = /* @__PURE__ */ new Map();
+    const seenIn = /* @__PURE__ */ new Map();
+    const rawChallenges = Array.isArray(description.challenges) ? description.challenges : [];
+    for (const challenge of rawChallenges) {
+      if (!isObject2(challenge)) continue;
+      const correct = [];
+      const typed = text(challenge.correct_answer_text);
+      if (typed !== null) correct.push(unescapeAnswer(typed));
+      const answers = Array.isArray(challenge.answers) ? challenge.answers : [];
+      for (const answer of answers) {
+        if (!isObject2(answer) || typeof answer.id !== "string") continue;
+        seenIn.set(answer.id, (seenIn.get(answer.id) ?? 0) + 1);
+        if (answer.is_correct === true) {
+          correctIn.set(answer.id, (correctIn.get(answer.id) ?? 0) + 1);
+          correct.push(text(answer.text) ?? "(image answer)");
+        }
+      }
+      if (correct.length > 0) challenges.push({ prompt: text(challenge.prompt_text), correct });
+    }
+    const highlightIds = [...correctIn].filter(([id, n]) => seenIn.get(id) === n).map(([id]) => id);
+    return { instructions: text(description.instructions), challenges, highlightIds };
+  }
+  function buildAnswerKey(body) {
+    const result = { keys: /* @__PURE__ */ new Map(), gradedFrameIds: [] };
+    for (const stream of readStreams(body)) {
+      const gradedCourse = stream.raw.exam !== false || GRADED_TITLE.test(stream.title);
+      for (const lesson of stream.lessons) {
+        if (lesson.frames === null) continue;
+        const graded = gradedCourse || lesson.raw.assessment !== false || lesson.raw.test !== false || GRADED_TITLE.test(lesson.title);
+        for (const frame of lesson.frames) {
+          if (!isObject2(frame) || typeof frame.id !== "string") continue;
+          if (graded) {
+            result.gradedFrameIds.push(frame.id);
+            continue;
+          }
+          const description = frame.tutor_bot_description;
+          if (!isObject2(description)) continue;
+          const frameKey = readFrame(description);
+          if (frameKey.challenges.length > 0) result.keys.set(frame.id, frameKey);
+        }
+      }
+    }
+    return result;
+  }
+
+  // src/highlight.ts
+  var STYLE_ID = "course-capture-answer-style";
+  var PANEL_ID = "course-capture-answer-panel";
+  var MARK_CLASS = "course-capture-correct-answer";
+  var UUID = /^[0-9a-f-]{36}$/i;
+  var CSS_TEXT = `
+.${MARK_CLASS} {
+  outline: 3px solid #22c55e !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.3) !important;
+}
+#${PANEL_ID} {
+  position: fixed;
+  right: 15px;
+  bottom: 100px;
+  z-index: 999998;
+  max-width: 340px;
+  max-height: 40vh;
+  overflow: auto;
+  padding: 8px 12px;
+  border-left: 4px solid #22c55e;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.82);
+  color: #ffffff;
+  font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+#${PANEL_ID} .title { font-weight: 700; }
+#${PANEL_ID} .instructions { opacity: 0.7; font-size: 12px; }
+#${PANEL_ID} ol { margin: 4px 0 0; padding-left: 18px; }
+#${PANEL_ID} .prompt { opacity: 0.8; }
+#${PANEL_ID} .answer { color: #86efac; font-weight: 600; }
+`;
+  var AnswerHighlighter = class {
+    doc;
+    schedule;
+    keys = /* @__PURE__ */ new Map();
+    /** Frames seen in graded or unflagged lessons: never keyed, even if keyed elsewhere first. */
+    denied = /* @__PURE__ */ new Set();
+    enabled = false;
+    observer = null;
+    pending = false;
+    /** Frame whose panel is showing (null: none), so the observer doesn't rebuild it in a loop. */
+    panelFrame = null;
+    constructor(options) {
+      this.doc = options.doc;
+      this.schedule = options.schedule ?? ((callback) => {
+        options.doc.defaultView?.requestAnimationFrame(callback);
+      });
+    }
+    isEnabled() {
+      return this.enabled;
+    }
+    addKeys(update) {
+      for (const frameId of update.gradedFrameIds) {
+        this.denied.add(frameId);
+        this.keys.delete(frameId);
+      }
+      for (const [frameId, key] of update.keys) {
+        if (!this.denied.has(frameId)) this.keys.set(frameId, key);
+      }
+      this.requestApply();
+    }
+    setEnabled(enabled) {
+      if (enabled === this.enabled) return;
+      this.enabled = enabled;
+      if (enabled) {
+        this.start();
+      } else {
+        this.stop();
+      }
+    }
+    start() {
+      const view = this.doc.defaultView;
+      if (view === null) return;
+      this.injectStyle();
+      this.observer = new view.MutationObserver(() => {
+        this.requestApply();
+      });
+      this.observer.observe(this.doc.documentElement, { childList: true, subtree: true });
+      this.requestApply();
+    }
+    stop() {
+      this.observer?.disconnect();
+      this.observer = null;
+      for (const marked of this.doc.querySelectorAll(`.${MARK_CLASS}`)) {
+        marked.classList.remove(MARK_CLASS);
+      }
+      this.doc.getElementById(PANEL_ID)?.remove();
+      this.panelFrame = null;
+    }
+    requestApply() {
+      if (!this.enabled || this.pending) return;
+      this.pending = true;
+      this.schedule(() => {
+        this.pending = false;
+        if (this.enabled) this.apply();
+      });
+    }
+    /**
+     * The slide on screen: the last `[frame-guid]` element that isn't animating out (AngularJS
+     * keeps the leaving slide in the DOM under `.ng-leave` until its animation ends).
+     */
+    currentFrame() {
+      const frames = [...this.doc.querySelectorAll("[frame-guid]")];
+      const entering = frames.filter((frame) => frame.closest(".ng-leave") === null);
+      return entering.at(-1) ?? frames.at(-1) ?? null;
+    }
+    /** Marks and panel for the slide currently on screen. Idempotent. */
+    apply() {
+      const frame = this.currentFrame();
+      const frameId = frame?.getAttribute("frame-guid") ?? null;
+      const key = frameId === null ? void 0 : this.keys.get(frameId);
+      const wantedMarks = /* @__PURE__ */ new Set();
+      if (frame !== null && key !== void 0) {
+        for (const id of key.highlightIds) {
+          if (!UUID.test(id)) continue;
+          for (const el of frame.querySelectorAll(`[component-id="${id}"]`)) wantedMarks.add(el);
+        }
+      }
+      for (const marked of this.doc.querySelectorAll(`.${MARK_CLASS}`)) {
+        if (!wantedMarks.has(marked)) marked.classList.remove(MARK_CLASS);
+      }
+      for (const el of wantedMarks) el.classList.add(MARK_CLASS);
+      const wanted = key === void 0 ? null : frameId;
+      if (wanted !== this.panelFrame) {
+        this.panelFrame = wanted;
+        this.renderPanel(key);
+      }
+    }
+    injectStyle() {
+      if (this.doc.getElementById(STYLE_ID) !== null) return;
+      const style = this.doc.createElement("style");
+      style.id = STYLE_ID;
+      style.textContent = CSS_TEXT;
+      (this.doc.querySelector("head") ?? this.doc.documentElement).appendChild(style);
+    }
+    renderPanel(key) {
+      this.doc.getElementById(PANEL_ID)?.remove();
+      const body = this.doc.querySelector("body");
+      if (key === void 0 || body === null) return;
+      const panel = this.doc.createElement("div");
+      panel.id = PANEL_ID;
+      const title = this.doc.createElement("div");
+      title.className = "title";
+      title.textContent = "Answer key";
+      panel.appendChild(title);
+      if (key.instructions !== null) {
+        const instructions = this.doc.createElement("div");
+        instructions.className = "instructions";
+        instructions.textContent = key.instructions;
+        panel.appendChild(instructions);
+      }
+      const list = this.doc.createElement("ol");
+      for (const challenge of key.challenges) {
+        const item = this.doc.createElement("li");
+        if (challenge.prompt !== null) {
+          const prompt = this.doc.createElement("span");
+          prompt.className = "prompt";
+          prompt.textContent = `${challenge.prompt} → `;
+          item.appendChild(prompt);
+        }
+        const answer = this.doc.createElement("span");
+        answer.className = "answer";
+        answer.textContent = challenge.correct.join(" / ");
+        item.appendChild(answer);
+        list.appendChild(item);
+      }
+      panel.appendChild(list);
+      body.appendChild(panel);
+    }
+  };
 
   // src/intercept.ts
   var LESSON_STREAM_PATH = /^\/api\/lesson_streams\/[0-9a-f-]{36}\.json$/i;
@@ -646,6 +877,7 @@
 
   // src/main.ts
   var CONFIG_KEY = "config";
+  var HIGHLIGHT_KEY = "highlightAnswers";
   var FALLBACK_DELAY_MS = 5e3;
   var LOG_TAG2 = "[course-capture]";
   var store = {
@@ -737,7 +969,13 @@
     const next = queue.nextDueIn();
     if (next !== null && loadConfig() !== null && !queue.authBlocked()) scheduleFlush(next);
   }
+  var highlighter = new AnswerHighlighter({ doc: document });
   function onPayload(url, body) {
+    try {
+      highlighter.addKeys(buildAnswerKey(body));
+    } catch (err) {
+      console.warn(LOG_TAG2, "building the answer key failed", err);
+    }
     const plan = planCapture(body, {
       sourceUrl: url,
       capturedAt: (/* @__PURE__ */ new Date()).toISOString(),
@@ -751,6 +989,28 @@
       console.info(LOG_TAG2, `queued ${added} file(s) from ${url}`);
       scheduleFlush(0);
     }
+  }
+  function highlightWanted() {
+    return store.get(HIGHLIGHT_KEY) === true;
+  }
+  function applyHighlightSetting() {
+    try {
+      highlighter.setEnabled(highlightWanted());
+    } catch (err) {
+      console.error(LOG_TAG2, "answer highlighting failed to start", err);
+    }
+  }
+  function highlightLabel() {
+    return `Highlight answers: ${highlightWanted() ? "ON" : "off"} (ungraded lessons)`;
+  }
+  function registerHighlightToggle() {
+    const toggle = () => {
+      store.set(HIGHLIGHT_KEY, !highlightWanted());
+      applyHighlightSetting();
+      GM_registerMenuCommand(highlightLabel(), toggle, { id: menuId });
+      showToast(`Answer highlighting ${highlightWanted() ? "on" : "off"}`);
+    };
+    const menuId = GM_registerMenuCommand(highlightLabel(), toggle);
   }
   function registerMenu() {
     GM_registerMenuCommand("Configure sync server", () => {
@@ -783,6 +1043,8 @@
     });
   }
   installInterceptors({ win: unsafeWindow, onPayload, fallbackDelayMs: FALLBACK_DELAY_MS });
+  registerHighlightToggle();
   registerMenu();
+  applyHighlightSetting();
   if (queue.pending().length > 0) scheduleFlush(FALLBACK_DELAY_MS);
 })();

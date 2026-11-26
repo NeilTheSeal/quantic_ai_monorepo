@@ -65,6 +65,25 @@ A green toast top-right ("Captured: 1.3 Scripts and Variables") confirms each up
 Tampermonkey menu also has **Show capture status**, **Retry uploads now** and **Forget local
 capture cache**. The server still dedupes after the cache is cleared.
 
+## Answer highlighting
+
+For skimming lessons you already know: Tampermonkey menu → **Highlight answers**. It's off by
+default, and the setting is remembered per browser. When it's on:
+
+- Correct answer buttons on the current slide get a green outline.
+- A panel at the bottom right lists every correct answer for the slide, with the card or
+  matching prompt where there is one. Typed-answer blanks appear only in the panel.
+- On slides where several cards or blanks share one set of answers ("this or that", matching,
+  multi-blank), the correct button depends on which card is active, so only the panel shows
+  them.
+
+The answers come from the same lesson_streams response as the capture (`is_correct` and
+`correct_answer_text` in `tutor_bot_description`). Graded content gets no key at all:
+highlighting needs `assessment: false` and `test: false` on the lesson and `exam: false` on the
+course, and a missing flag counts as graded. Lessons or courses whose title says SmartCase, exam or
+assessment are skipped as well, in case a graded lesson is ever flagged wrong. See
+[src/answers.ts](src/answers.ts) and [src/highlight.ts](src/highlight.ts).
+
 ## How it works
 
 - [src/intercept.ts](src/intercept.ts) wraps the page's `XMLHttpRequest` and `fetch`

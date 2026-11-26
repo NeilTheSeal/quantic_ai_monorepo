@@ -1,6 +1,6 @@
 {
   "name": "course-summarize",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "description": "Tampermonkey userscript that captures Quantic lesson content and uploads it to the WebDAV sync server",
   "type": "module",
@@ -18,9 +18,11 @@
     "test": "node --test tests/"
   },
   "devDependencies": {
+    "@types/jsdom": "^30.0.0",
     "@types/node": "^24.19.4",
     "@types/tampermonkey": "^5.5.0",
     "esbuild": "^0.28.2",
+    "jsdom": "^31.0.1",
     "typescript": "^7.0.2"
   }
 }

@@ -1,13 +1,17 @@
 // Entry point: wires the interceptors to the upload queue and registers the menu commands.
 // GM_* globals are used only here and in webdav.ts so the other modules run under node:test.
 
+import { buildAnswerKey } from "./answers.ts";
 import { planCapture } from "./capture.ts";
+import { AnswerHighlighter } from "./highlight.ts";
 import { installInterceptors } from "./intercept.ts";
 import { type KeyValueStore, type QueueItem, UploadQueue } from "./queue.ts";
 import { showToast } from "./toast.ts";
 import { type SyncConfig, createGmDavClient, isSyncConfig, normalizeBaseUrl } from "./webdav.ts";
 
 const CONFIG_KEY = "config";
+/** Boolean: highlight correct answers in ungraded lessons. Off unless toggled on. */
+const HIGHLIGHT_KEY = "highlightAnswers";
 const FALLBACK_DELAY_MS = 5000;
 const LOG_TAG = "[course-capture]";
 
@@ -113,7 +117,15 @@ async function runFlush(): Promise<void> {
   if (next !== null && loadConfig() !== null && !queue.authBlocked()) scheduleFlush(next);
 }
 
+const highlighter = new AnswerHighlighter({ doc: document });
+
 function onPayload(url: string, body: unknown): void {
+  // Built even while highlighting is off, so toggling it on mid-lesson works.
+  try {
+    highlighter.addKeys(buildAnswerKey(body));
+  } catch (err: unknown) {
+    console.warn(LOG_TAG, "building the answer key failed", err);
+  }
   const plan = planCapture(body, {
     sourceUrl: url,
     capturedAt: new Date().toISOString(),
@@ -127,6 +139,34 @@ function onPayload(url: string, body: unknown): void {
     console.info(LOG_TAG, `queued ${added} file(s) from ${url}`);
     scheduleFlush(0);
   }
+}
+
+function highlightWanted(): boolean {
+  return store.get(HIGHLIGHT_KEY) === true;
+}
+
+/** Applies the stored setting. Never throws: a failure here must not take the menus with it. */
+function applyHighlightSetting(): void {
+  try {
+    highlighter.setEnabled(highlightWanted());
+  } catch (err: unknown) {
+    console.error(LOG_TAG, "answer highlighting failed to start", err);
+  }
+}
+
+function highlightLabel(): string {
+  return `Highlight answers: ${highlightWanted() ? "ON" : "off"} (ungraded lessons)`;
+}
+
+function registerHighlightToggle(): void {
+  const toggle = (): void => {
+    store.set(HIGHLIGHT_KEY, !highlightWanted());
+    applyHighlightSetting();
+    // Same id: updates the label in place (and keeps this handler).
+    GM_registerMenuCommand(highlightLabel(), toggle, { id: menuId });
+    showToast(`Answer highlighting ${highlightWanted() ? "on" : "off"}`);
+  };
+  const menuId = GM_registerMenuCommand(highlightLabel(), toggle);
 }
 
 function registerMenu(): void {
@@ -162,6 +202,9 @@ function registerMenu(): void {
 }
 
 installInterceptors({ win: unsafeWindow, onPayload, fallbackDelayMs: FALLBACK_DELAY_MS });
+// Menus first, so the toggle to turn highlighting off exists even if starting it fails.
+registerHighlightToggle();
 registerMenu();
+applyHighlightSetting();
 // Uploads left over from an earlier page (closed tab, server down).
 if (queue.pending().length > 0) scheduleFlush(FALLBACK_DELAY_MS);
