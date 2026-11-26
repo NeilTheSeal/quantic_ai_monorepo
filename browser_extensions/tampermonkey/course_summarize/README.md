@@ -112,6 +112,53 @@ npm run lint-check && npm run type-check && npm run format-check
 Tampermonkey only installs an update when `@version` goes up, so commit `dist/` from
 `npm run release`, not `npm run build`.
 
+## Course summaries (Python)
+
+[summarize.py](summarize.py) turns finished courses into study guides. Run it with no arguments
+after finishing a course:
+
+```bash
+python3.15 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt   # once
+cp .env.example .env                                                            # then fill in
+.venv/bin/python summarize.py
+```
+
+From anywhere in the repo, `scripts/summarize-courses` does the same.
+
+For every course folder on the sync server, it:
+
+1. Skips the course if `courses/<course>/summary.md` already exists in this repo. If the sync
+   server has a copy in `working/summary.md` (the course was summarized on the other
+   machine), it restores that copy instead of paying for a new one.
+2. Skips the course if any released lesson in its outline hasn't been captured yet, so a
+   course in progress is never summarized early.
+3. Describes every image actually shown in the ungraded lessons with Claude Haiku 5.5, which
+   transcribes code screenshots verbatim. About four in five image components in a lesson are
+   leftovers that never render; they're skipped. Descriptions are cached in
+   `working/image_captions.json`, so a re-run doesn't pay twice.
+4. Builds `working/corpus.md`: each ungraded lesson slide by slide, with its instructions,
+   text, image descriptions, practice questions (✓/✗ with Quantic's feedback), objectives and
+   key terms. It leaves out graded lessons (SmartCases, exams), `author_comments`, and the
+   auto-generated `key_term_definitions`, which are often wrong.
+5. Sends the corpus and Quantic's course PDFs to Claude Opus 5.5 (adaptive thinking, high
+   effort, streamed, with web search to confirm further-reading links). It writes
+   `courses/<course>/summary.md` here, plus `working/summary.md` and `working/summary_meta.json`
+   (token usage and estimated cost) on the sync server.
+
+The guide keeps Quantic's own definitions and framing in the body. Anything the model adds from
+outside the course goes in `> **Beyond the course:**` blockquotes. Refusal fallbacks are on
+(`fallbacks: "default"`), so a declined request is retried on another model. A course costs
+roughly $2-3 in API usage, mostly the Opus call. The printed estimate and `summary_meta.json`
+give the actual figure.
+
+Python code lives in [summarizer/](summarizer/) (`pipeline.py` orchestrates; `corpus.py`,
+`captions.py`, `summary.py`, `webdav.py`), tests in `tests/summarizer/`:
+
+```bash
+.venv/bin/python -m ruff format --check . && .venv/bin/python -m ruff check . \
+  && .venv/bin/python -m mypy . && .venv/bin/python -m pytest -q
+```
+
 ## Future work
 
 - **Whole course in one request.** The same endpoint accepts
@@ -120,15 +167,7 @@ Tampermonkey only installs an update when `@version` goes up, so commit `dist/` 
   lesson. The capture code already saves every lesson in a response that has frames; what's
   missing is a trigger that makes the request. The response is roughly 10× bigger, so keep the
   per-lesson files.
-- **Assets** (`fetch_assets.py`): download frame images (from `components[].image.formats.original.url`)
-  and the course PDFs in `course.json` (`resource_downloads`, `summaries`) into the course folder
-  in `sync_files`. Skip videos.
-- **Corpus** (`build_corpus.py`): convert each lesson to Markdown with role labels (instruction,
-  main text, popover, answer ✓/✗ with feedback, image, key terms, the learning objective a
-  frame belongs to). Leave out `author_comments`. External links stay as links.
-- **Summary** (`summarize.py`): call a hosted model (Opus 5.5 / GPT) over the corpus and write
-  `courses/<course_name>/summary.md` in this repo. Only the summary goes there; captured content
-  stays in private `sync_files`. Use the tested-vs-background signal from `is_correct`
-  challenges and the objective-to-frame mapping in `course.json`.
+- **Archive assets.** Images and PDFs are only read from Quantic's CDN at summary time. To keep
+  them after graduation, download them into each course folder in `sync_files` (skip videos).
 - SmartCases (the graded end-of-course quizzes) use the same lesson format and are captured
-  like any other lesson.
+  like any other lesson, but they never reach a summary.

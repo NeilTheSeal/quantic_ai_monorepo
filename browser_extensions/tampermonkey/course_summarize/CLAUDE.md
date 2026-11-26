@@ -15,6 +15,15 @@ Adds to the root CLAUDE.md. See [README.md](README.md) for what this does and th
 - **This repo is public.** Never put credentials, captured course content, or API samples in
   tracked files. The server URL and credentials live in Tampermonkey storage. Captured data lives
   only in the private `sync_files` repo. Only the final `summary.md` goes in `courses/<course>/`.
-- Python scripts, when they come, live in this folder with their own `.venv` on Python 3.15.2
-  (`python3.15 -m venv .venv`) and use it as `.venv/bin/python …`.
-- Gates: `npm run lint-check && npm run type-check && npm test && npm run format-check`.
+- **Python** (`summarize.py`, `summarizer/`, `tests/summarizer/`): its own `.venv` on Python
+  3.15.2 with [requirements.txt](requirements.txt); run tools as `.venv/bin/python -m …`. Ruff and
+  mypy use the root `pyproject.toml`; the local one only sets pytest's `pythonpath`. Secrets
+  (`ANTHROPIC_API_KEY`, `WEBDAV_*`) come from this folder's `.env` (see `.env.example`).
+- The summarizer must never feed graded content (SmartCases, exams: see `Course.is_graded`) to a
+  model, and only `summary.md` goes in the monorepo. All other working data goes to `sync_files`
+  through the WebDAV server.
+- Summary prompts live in `summarizer/summary.py`. Changing them changes every future summary;
+  existing summaries are only regenerated when their `summary.md` is deleted, both locally and
+  in `sync_files` under `working/`.
+- Gates: `npm run lint-check && npm run type-check && npm test && npm run format-check`, and for
+  Python `ruff format --check`, `ruff check`, `mypy`, `pytest` through `.venv/bin/python -m`.

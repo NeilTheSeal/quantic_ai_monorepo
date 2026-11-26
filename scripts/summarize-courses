@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Summarize every captured Quantic course that has no summary yet.
+#
+#   summarize-courses
+#
+# Runs browser_extensions/tampermonkey/course_summarize/summarize.py with that project's own
+# .venv (Python 3.15.2). Settings come from the .env in that folder; see its README.
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+root="$(cd "${script_dir}/.." && pwd)"
+project="${root}/browser_extensions/tampermonkey/course_summarize"
+python="${project}/.venv/bin/python"
+
+if [ ! -x "${python}" ]; then
+  echo "summarize-courses: no .venv in ${project}" >&2
+  echo "Create it with:" >&2
+  echo "  cd \"${project}\" && python3.15 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt" >&2
+  exit 1
+fi
+
+exec "${python}" "${project}/summarize.py" "$@"

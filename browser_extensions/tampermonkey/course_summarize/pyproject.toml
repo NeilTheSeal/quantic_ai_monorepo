@@ -1,0 +1,5 @@
+# Only pytest settings live here: ruff and mypy keep using the monorepo root pyproject.toml.
+# pythonpath makes `import summarizer` work when pytest runs from this folder.
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
